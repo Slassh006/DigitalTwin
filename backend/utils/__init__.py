@@ -10,12 +10,13 @@ from .data_loaders import (
     get_available_patients
 )
 
-from .physics_loss import (
-    physics_loss,
-    elasticity_regularization,
-    PINNLoss,
-    compute_confidence
-)
+# Physics loss requires torch - only import in PINN server, not client nodes
+# from .physics_loss import (
+#     physics_loss,
+#     elasticity_regularization,
+#     PINNLoss,
+#     compute_confidence
+# )
 
 from .mesh_generator import (
     generate_uterus_mesh_from_mri,
@@ -35,11 +36,6 @@ __all__ = [
     'load_clinical_data',
     'load_pathology_data',
     'get_available_patients',
-    # Physics loss
-    'physics_loss',
-    'elasticity_regularization',
-    'PINNLoss',
-    'compute_confidence',
     # Mesh generation
     'generate_uterus_mesh_from_mri',
     'generate_simplified_uterus_mesh',

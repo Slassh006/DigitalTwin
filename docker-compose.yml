@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  imaging-node:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.client
+    ports:
+      - "8001:8000"
+    environment:
+      - NODE_TYPE=imaging
+      - DATA_PATH=/app/data
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data/imaging:/app/data
+    command: uvicorn clients.client_imaging:app --host 0.0.0.0 --port 8000
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  clinical-node:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.client
+    ports:
+      - "8002:8000"
+    environment:
+      - NODE_TYPE=clinical
+      - DATA_PATH=/app/data
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data/clinical:/app/data
+    command: uvicorn clients.client_clinical:app --host 0.0.0.0 --port 8000
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  pathology-node:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.client
+    ports:
+      - "8003:8000"
+    environment:
+      - NODE_TYPE=pathology
+      - DATA_PATH=/app/data
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data/pathology:/app/data
+    command: uvicorn clients.client_pathology:app --host 0.0.0.0 --port 8000
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  pinn-server:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.pinn
+    ports:
+      - "8004:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data/models:/app/data/models
+      - ./data/meshes:/app/data/meshes
+    depends_on:
+      - imaging-node
+      - clinical-node
+      - pathology-node
+    mem_limit: 1g
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

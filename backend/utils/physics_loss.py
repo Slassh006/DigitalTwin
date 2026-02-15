@@ -2,7 +2,7 @@
 
 import torch
 import torch.nn as nn
-from typing import Tuple
+from typing import Tuple, Optional
 
 
 def physics_loss(
