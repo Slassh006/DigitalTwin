@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: node-imaging
+  labels:
+    name: node-imaging
+    type: federated-node
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: node-clinical
+  labels:
+    name: node-clinical
+    type: federated-node
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: node-pathology
+  labels:
+    name: node-pathology
+    type: federated-node
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: central-pinn
+  labels:
+    name: central-pinn
+    type: aggregator

@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: imaging-node
+  namespace: node-imaging
+  labels:
+    app: imaging-node
+    tier: federated-client
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: imaging-node
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: imaging-node
+    spec:
+      containers:
+      - name: imaging-node
+        image: imaging-node:latest
+        imagePullPolicy: Never  # For local development
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: NODE_TYPE
+          value: "imaging"
+        - name: DATA_PATH
+          value: "/app/data"
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: data-volume
+          mountPath: /app/data
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: imaging-data

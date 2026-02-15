@@ -1,0 +1,13 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+    images: {
+        domains: ['localhost'],
+    },
+    webpack: (config) => {
+        // Fix for Three.js in Next.js
+        config.externals = [...(config.externals || []), { canvas: 'canvas' }];
+        return config;
+    },
+}
+
+module.exports = nextConfig

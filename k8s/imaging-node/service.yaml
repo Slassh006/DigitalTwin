@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: imaging-service
+  namespace: node-imaging
+  labels:
+    app: imaging-node
+spec:
+  type: ClusterIP
+  selector:
+    app: imaging-node
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
