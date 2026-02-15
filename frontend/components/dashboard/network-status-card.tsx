@@ -1,57 +1,86 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, FileText, FlaskConical } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Database, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NetworkStatusCardProps {
     nodeName: string;
     nodeType: string;
     status: string;
-    isTraining: boolean;
+    isTraining?: boolean;
 }
 
-export function NetworkStatusCard({ nodeName, nodeType, status, isTraining }: NetworkStatusCardProps) {
-    const getIcon = () => {
-        switch (nodeType) {
-            case "imaging":
-                return Brain;
-            case "clinical":
-                return FileText;
-            case "pathology":
-                return FlaskConical;
+export function NetworkStatusCard({
+    nodeName,
+    nodeType,
+    status,
+    isTraining = false
+}: NetworkStatusCardProps) {
+    const getNodeIcon = (type: string) => {
+        switch (type.toLowerCase()) {
+            case 'imaging':
+            case 'clinical':
+            case 'pathology':
+                return Database;
             default:
-                return Brain;
+                return Activity;
         }
     };
 
-    const Icon = getIcon();
-
-    const getStatusColor = () => {
-        if (status === "healthy") return "text-green-500";
-        if (status === "unhealthy") return "text-yellow-500";
-        return "text-red-500";
-    };
+    const Icon = getNodeIcon(nodeType);
+    const isHealthy = status === "healthy";
 
     return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{nodeName}</CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                        <div className={cn("h-2 w-2 rounded-full", isTraining ? "bg-blue-500 live-pulse" : getStatusColor())}></div>
-                        <span className="text-xs text-muted-foreground">
-                            {isTraining ? "Training..." : status}
-                        </span>
+        <Card className="p-6 card-hover card-glow">
+            <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-2">
+                    <div className={cn(
+                        "p-2 rounded-lg",
+                        isHealthy ? "bg-green-100 dark:bg-green-900/30" : "bg-gray-100 dark:bg-gray-800"
+                    )}>
+                        <Icon className={cn(
+                            "h-5 w-5",
+                            isHealthy ? "text-green-600 dark:text-green-400" : "text-gray-400"
+                        )} />
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                        Type: {nodeType}
-                    </p>
+                    <div>
+                        <h3 className="font-semibold">{nodeName}</h3>
+                        <p className="text-sm text-muted-foreground capitalize">{nodeType}</p>
+                    </div>
                 </div>
-            </CardContent>
+
+                {/* Status indicator */}
+                <div className="flex items-center gap-2">
+                    {isHealthy && (
+                        <div className="relative">
+                            <div className="h-2 w-2 rounded-full bg-green-500 live-pulse"></div>
+                        </div>
+                    )}
+                    <Badge variant={isHealthy ? "success" : "secondary"} className="capitalize">
+                        {status}
+                    </Badge>
+                </div>
+            </div>
+
+            <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Training</span>
+                    <Badge variant={isTraining ? "warning" : "outline"}>
+                        {isTraining ? "Active" : "Idle"}
+                    </Badge>
+                </div>
+                <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Data Ready</span>
+                    <span className={cn(
+                        "font-medium",
+                        isHealthy ? "text-green-600 dark:text-green-400" : "text-gray-400"
+                    )}>
+                        {isHealthy ? "Yes" : "No"}
+                    </span>
+                </div>
+            </div>
         </Card>
     );
 }
