@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { predict } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Activity } from "lucide-react";
+import Header from "@/components/header-new";
 
 export default function SimulationPage() {
     const [prediction, setPrediction] = useState<any>(null);
@@ -50,8 +51,11 @@ export default function SimulationPage() {
     };
 
     return (
-        <div className="space-y-6 h-full">
-            {/* Header */}
+        <div className="flex flex-col h-screen overflow-hidden bg-background-dark text-white font-body">
+            <Header />
+            <div className="flex-1 p-6 space-y-6 overflow-auto">
+
+            {/* Page Header */}
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">3D Digital Twin Simulation</h1>
@@ -146,6 +150,8 @@ export default function SimulationPage() {
                         </div>
                     </Card>
                 </div>
+            </div>
+
             </div>
         </div>
     );

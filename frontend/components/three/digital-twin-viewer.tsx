@@ -35,7 +35,7 @@ export function DigitalTwinViewer({ stiffness, meshUrl, predictionData }: Digita
     );
 
     return (
-        <div className="w-full h-full relative bg-slate-950 rounded-lg overflow-hidden border border-primary/20 shadow-[0_0_30px_rgba(0,255,255,0.1)]">
+        <div className="w-full h-full relative rounded-lg overflow-hidden border border-primary/20 shadow-[0_0_30px_rgba(0,255,255,0.1)]" style={{ backgroundColor: '#0a0a1a' }}>
             <Canvas shadows gl={{ antialias: false }}>
                 <PerspectiveCamera makeDefault position={[0, 0, 5]} fov={60} />
 

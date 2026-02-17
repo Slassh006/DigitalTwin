@@ -1,5 +1,3 @@
-import { SystemLog } from "@/types/logs";
-
 /**
  * Simulation Engine for EndoTwin
  * Generates realistic medical data where backend endpoints are missing.

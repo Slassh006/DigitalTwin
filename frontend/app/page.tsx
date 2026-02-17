@@ -2,9 +2,7 @@ import Header from "@/components/header-new"
 import FederatedNodesPanel from "@/components/federated-nodes-panel"
 import PredictionEnginePanel from "@/components/prediction-engine-panel"
 import TrainingMetricsDashboard from "@/components/training-metrics-dashboard"
-// import HolographicViewer from "@/components/three/holographic-viewer-new"
 import { DigitalTwinViewer } from "@/components/three/digital-twin-viewer"
-// Using the Real 3D Viewer with uterus.glb
 
 export default function Home() {
     return (

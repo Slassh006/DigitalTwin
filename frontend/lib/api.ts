@@ -163,7 +163,8 @@ export async function deletePatient(id: string): Promise<void> {
 
 // ==================== Settings Management ====================
 
-export type { Settings, UpdateSettingsRequest } from '@/types/settings';
+import type { Settings, UpdateSettingsRequest } from '@/types/settings';
+export type { Settings, UpdateSettingsRequest };
 
 export async function getSettings(): Promise<Settings> {
     const response = await fetch(`${API_BASE_URL}/config`);

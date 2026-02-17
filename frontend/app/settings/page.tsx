@@ -6,15 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Settings as SettingsIcon, Database, Bell, Shield, Loader2 } from "lucide-react";
+import { Settings as SettingsIcon, Database, Bell, Shield, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
 import { getSettings, updateSettings, type Settings } from "../../lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import Header from "@/components/header-new";
 
 export default function SettingsPage() {
     const [settings, setSettings] = useState<Settings | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [hasError, setHasError] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -23,14 +25,24 @@ export default function SettingsPage() {
 
     const loadSettings = async () => {
         setIsLoading(true);
+        setHasError(false);
         try {
             const data = await getSettings();
             setSettings(data);
         } catch (error) {
+            setHasError(true);
             toast({
                 title: "Error",
-                description: "Failed to load settings",
+                description: "Failed to load settings. Using default values.",
                 variant: "destructive",
+            });
+            setSettings({
+                learning_rate: 0.001,
+                batch_size: 32,
+                physics_loss_weight: 0.5,
+                epochs: 10,
+                theme: 'dark',
+                notifications_enabled: true,
             });
         } finally {
             setIsLoading(false);
@@ -66,15 +78,18 @@ export default function SettingsPage() {
 
     if (isLoading) {
         return (
-            <div className="space-y-6">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Configure application preferences and system parameters
-                    </p>
-                </div>
-                <div className="grid gap-6">
-                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-48" />)}
+            <div className="flex flex-col h-screen overflow-hidden bg-background-dark text-white font-body">
+                <Header />
+                <div className="flex-1 p-6 space-y-6 overflow-auto">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+                        <p className="text-muted-foreground mt-1">
+                            Configure application preferences and system parameters
+                        </p>
+                    </div>
+                    <div className="grid gap-6">
+                        {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-48" />)}
+                    </div>
                 </div>
             </div>
         );
@@ -83,8 +98,11 @@ export default function SettingsPage() {
     if (!settings) return null;
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
+        <div className="flex flex-col h-screen overflow-hidden bg-background-dark text-white font-body">
+            <Header />
+            <div className="flex-1 p-6 space-y-6 overflow-auto">
+
+            {/* Page Header */}
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
@@ -97,6 +115,17 @@ export default function SettingsPage() {
                     Save Changes
                 </Button>
             </div>
+
+            {/* Backend Connection Warning */}
+            {hasError && (
+                <div className="flex items-center gap-3 p-3 rounded-lg border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 text-sm">
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    <span>Backend unreachable. Showing default settings. Changes won&apos;t be saved until the backend is online.</span>
+                    <Button variant="ghost" size="sm" className="ml-auto text-yellow-300 hover:text-yellow-100" onClick={loadSettings}>
+                        <RefreshCw className="h-3 w-3 mr-1" /> Retry
+                    </Button>
+                </div>
+            )}
 
             {/* Settings Sections */}
             <div className="grid gap-6">
@@ -157,7 +186,7 @@ export default function SettingsPage() {
                             <label className="font-medium">Batch Size</label>
                             <Select
                                 value={settings.batch_size.toString()}
-                                onValueChange={(value) => updateSetting('batch_size', parseInt(value))}
+                                onValueChange={(value: string) => updateSetting('batch_size', parseInt(value))}
                             >
                                 <SelectTrigger>
                                     <SelectValue />
@@ -196,7 +225,7 @@ export default function SettingsPage() {
                             <label className="font-medium">Training Epochs</label>
                             <Select
                                 value={settings.epochs.toString()}
-                                onValueChange={(value) => updateSetting('epochs', parseInt(value))}
+                                onValueChange={(value: string) => updateSetting('epochs', parseInt(value))}
                             >
                                 <SelectTrigger>
                                     <SelectValue />
@@ -215,6 +244,8 @@ export default function SettingsPage() {
                         </div>
                     </CardContent>
                 </Card>
+            </div>
+
             </div>
         </div>
     );
