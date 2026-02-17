@@ -2,7 +2,9 @@ import Header from "@/components/header-new"
 import FederatedNodesPanel from "@/components/federated-nodes-panel"
 import PredictionEnginePanel from "@/components/prediction-engine-panel"
 import TrainingMetricsDashboard from "@/components/training-metrics-dashboard"
-import HolographicViewer from "@/components/three/holographic-viewer-new"
+// import HolographicViewer from "@/components/three/holographic-viewer-new"
+import { DigitalTwinViewer } from "@/components/three/digital-twin-viewer"
+// Using the Real 3D Viewer with uterus.glb
 
 export default function Home() {
     return (
@@ -19,8 +21,9 @@ export default function Home() {
                 </div>
 
                 {/* CENTER PANEL: 3D Visualization (Spans 8 rows height) */}
-                <div className="col-span-12 md:col-span-6 md:row-span-8 min-h-[400px] md:min-h-0">
-                    <HolographicViewer />
+                <div className="col-span-12 md:col-span-6 md:row-span-8 min-h-[400px] md:min-h-0 relative group">
+                    {/* Passing default stiffness, real interactive model */}
+                    <DigitalTwinViewer stiffness={2.4} />
                 </div>
 
                 {/* RIGHT PANEL: Prediction Metrics (Spans 8 rows height) */}

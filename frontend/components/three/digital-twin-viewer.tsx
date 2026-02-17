@@ -3,8 +3,10 @@
 import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { BackendMesh } from "./backend-mesh";
 import { LesionMarker } from "./lesion-marker";
+import { HolographicParticles, HolographicGrid } from "./holographic-effects";
 import { DataPanel, StiffnessBar } from "../visualization/data-panel";
 import type { PredictionResponse, LesionData } from "@/types/prediction";
 
@@ -18,7 +20,7 @@ export function DigitalTwinViewer({ stiffness, meshUrl, predictionData }: Digita
     // Default to uterus GLB model if no meshUrl provided
     const actualMeshUrl = meshUrl || "/models/uterus.glb";
 
-    // Mock lesion data if not provided
+    // Mock lesion data if not provided (Ensure IDs are unique string)
     const lesions: LesionData[] = predictionData?.lesions || (
         stiffness > 5 ? [
             {
@@ -33,20 +35,31 @@ export function DigitalTwinViewer({ stiffness, meshUrl, predictionData }: Digita
     );
 
     return (
-        <div className="w-full h-full relative bg-gradient-to-b from-slate-900 to-slate-800 rounded-lg overflow-hidden">
-            <Canvas shadows>
+        <div className="w-full h-full relative bg-slate-950 rounded-lg overflow-hidden border border-primary/20 shadow-[0_0_30px_rgba(0,255,255,0.1)]">
+            <Canvas shadows gl={{ antialias: false }}>
                 <PerspectiveCamera makeDefault position={[0, 0, 5]} fov={60} />
 
-                {/* Lighting */}
-                <ambientLight intensity={0.5} />
-                <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
-                <pointLight position={[-10, -10, -10]} intensity={0.5} />
-                <pointLight position={[0, 10, 0]} intensity={0.3} color="#00ffff" />
+                {/* Lighting - Cooler Sci-Fi Tones */}
+                <ambientLight intensity={0.2} color="#001133" />
+                <spotLight position={[10, 10, 10]} angle={0.2} penumbra={1} intensity={2} color="#00ffff" castShadow />
+                <pointLight position={[-5, 0, -5]} intensity={1.5} color="#ff00ff" />
+                <pointLight position={[5, -5, 0]} intensity={1.0} color="#0000ff" />
 
-                {/* 3D Model */}
+                {/* 3D Model with Holographic Material */}
                 <Suspense fallback={null}>
                     <BackendMesh stiffness={stiffness} meshUrl={actualMeshUrl} />
                 </Suspense>
+
+                {/* Particle Field */}
+                <HolographicParticles count={500} />
+
+                {/* Holographic Grid (Floor & Background) */}
+                <group position={[0, -2, 0]}>
+                    <HolographicGrid />
+                </group>
+                <group position={[0, 0, -3]} rotation={[Math.PI / 2, 0, 0]}>
+                    <HolographicGrid />
+                </group>
 
                 {/* Lesion Markers */}
                 {lesions.map((lesion) => (
@@ -60,6 +73,16 @@ export function DigitalTwinViewer({ stiffness, meshUrl, predictionData }: Digita
                     />
                 ))}
 
+                {/* Post Processing: Bloom */}
+                <EffectComposer enabled={true}>
+                    <Bloom
+                        intensity={1.5}
+                        luminanceThreshold={0.85}
+                        luminanceSmoothing={0.02}
+                        height={300}
+                    />
+                </EffectComposer>
+
                 {/* Controls */}
                 <OrbitControls
                     enableZoom={true}
@@ -72,8 +95,10 @@ export function DigitalTwinViewer({ stiffness, meshUrl, predictionData }: Digita
             </Canvas>
 
             {/* Controls HUD */}
-            <div className="absolute top-4 left-4 text-white text-sm bg-black/50 px-3 py-1 rounded">
-                Drag to rotate • Scroll to zoom
+            <div className="absolute top-4 left-4 text-accent-cyan text-xs font-mono bg-black/60 border border-accent-cyan/30 px-3 py-1 rounded backdrop-blur-sm">
+                SYSTEM.VISUALIZATION_MODE = HOLOGRAM
+                <br />
+                DRAG TO ROTATE • SCROLL TO ZOOM
             </div>
 
             {/* Tissue Analysis Panel */}

@@ -17,12 +17,10 @@ export default function QuantumConsoleLogs() {
     const logsEndRef = useRef<HTMLDivElement>(null)
     const processedEpochs = useRef<Set<number>>(new Set())
 
-    // Initial logs
+    // Initial logs - System Ready state
     useEffect(() => {
         setLogs([
-            { id: 'init-1', timestamp: new Date().toLocaleTimeString(), type: 'INFO', message: 'Initializing PINN model architecture with 4 hidden layers...' },
-            { id: 'init-2', timestamp: new Date().toLocaleTimeString(), type: 'INFO', message: 'Distributing weights across Federated Nodes (Secure Aggregation Protocol)' },
-            { id: 'init-3', timestamp: new Date().toLocaleTimeString(), type: 'SUCCESS', message: 'Physics boundary conditions verified: Dirichlet & Neumann OK.' },
+            { id: 'init-1', timestamp: new Date().toLocaleTimeString(), type: 'INFO', message: 'System Ready. Waiting for training stream...' },
         ])
     }, [])
 
@@ -31,7 +29,7 @@ export default function QuantumConsoleLogs() {
             try {
                 const data = await getAnalyticsMetrics()
 
-                // Generate logs based on new data
+                // Generate logs based on REAL training data
                 if (data.latest_run?.epochs) {
                     const latestEpoch = data.latest_run.epochs[data.latest_run.epochs.length - 1]
                     if (latestEpoch && !processedEpochs.current.has(latestEpoch.epoch)) {
@@ -42,16 +40,6 @@ export default function QuantumConsoleLogs() {
                             type: 'TRAIN',
                             message: `Epoch ${latestEpoch.epoch}/${data.total_epochs_trained + 10} completed. MSE Loss: ${latestEpoch.loss.toFixed(4)}, Physics Loss: ${(latestEpoch.physics_loss || 0).toFixed(4)}`
                         })
-
-                        // Randomly add physics validation or warning
-                        if (Math.random() > 0.8) {
-                            setTimeout(() => {
-                                addLog({
-                                    type: 'WARN',
-                                    message: `Gradient spike detected in hidden_layer_${Math.floor(Math.random() * 4)}. Autoscaling Learning Rate...`
-                                })
-                            }, 500)
-                        }
                     }
                 }
             } catch (error) {
@@ -105,9 +93,9 @@ export default function QuantumConsoleLogs() {
                             >
                                 <span className="text-gray-600 w-20">[{log.timestamp}]</span>
                                 <span className={`w-16 font-bold ${log.type === 'INFO' ? 'text-primary' :
-                                        log.type === 'SUCCESS' ? 'text-success' :
-                                            log.type === 'WARN' ? 'text-warning' :
-                                                log.type === 'TRAIN' ? 'text-accent-cyan' : 'text-red-500'
+                                    log.type === 'SUCCESS' ? 'text-success' :
+                                        log.type === 'WARN' ? 'text-warning' :
+                                            log.type === 'TRAIN' ? 'text-accent-cyan' : 'text-red-500'
                                     }`}>{log.type}</span>
                                 <span className="text-gray-300 break-all">{log.message}</span>
                             </motion.div>

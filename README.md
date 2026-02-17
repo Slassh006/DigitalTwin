@@ -1,280 +1,101 @@
-# Endometriosis Digital Twin 🏥
+# Endotwin: Endometriosis Digital Twin Platform 🏥
 
-A federated learning system for endometriosis prediction using Physics-Informed Neural Networks (PINNs), deployed on Kubernetes with 3D visualization.
-
-## 🎯 System Overview
-
-**Architecture:**
-- **3 Federated Data Nodes**: Imaging (MRI), Clinical (Patient Records), Pathology (Lab Reports)
-- **1 Central PINN Server**: Physics-informed aggregator
-- **Next.js Dashboard**: Real-time 3D visualization and training monitoring
-
-**Privacy-First Design:**
-- Raw data never leaves local nodes
-- Only learned features are shared with central server
-- Kubernetes namespace isolation
+A next-generation **Digital Twin** platform for endometriosis prediction, utilizing **Federated Learning** and **Physics-Informed Neural Networks (PINNs)**. This system integrates real-time node contributions, longitudinal analytics, and high-fidelity 3D visualization to provide personalized patient insights while preserving data privacy.
 
 ---
 
-## 📂 Data Preparation
+## 🌟 Key Features
 
-### Required Datasets
+### 1. 🌐 Federated Learning Ecosystem
+*   **Privacy-First:** Trains on distributed data nodes (Imaging, Clinical, Pathology) without raw data ever leaving the source.
+*   **Real-Time Contributions:** Visualizes live weight updates and contribution percentages from each federated node.
+*   **Secure Aggregation:** Central PINN server aggregates learned patterns to update the global model.
 
-Place your data files in the following structure:
+### 2. 🧠 Physics-Informed AI (PINN)
+*   **Medical Accuracy:** Incorporates tissue elasticity physics (Lamé parameters) into the loss function.
+*   **Constraint Enforcement:** Ensures predictions obey biological laws (e.g., stiff tissue corresponds to lesions).
+*   **Dynamic Hyperparameters:** Real-time tuning of learning rates, batch sizes, and physics weights via the Training Dashboard.
 
-```
-H:/Akash/DigitalTwin/data/
-├── imaging/
-│   ├── patient_001.nii
-│   ├── patient_002.nii
-│   └── ...
-├── clinical/
-│   └── records.csv          # Columns: patient_id, age, bmi, symptoms, etc.
-├── pathology/
-│   └── lab_reports.csv      # Columns: patient_id, marker1, marker2, etc.
-└── labels/
-    └── annotations.csv      # Columns: patient_id, has_endometriosis (0/1)
-```
-
-### 3D Uterus Model (Optional)
-
-If you have a custom 3D mesh, place it here:
-```
-H:/Akash/DigitalTwin/assets/models/uterus.glb
-```
-
-Otherwise, the system will generate one from your MRI scans.
+### 3. 🖥️ Endotwin Console (Frontend)
+*   **Real-Time 3D Visualization:** Interactive **Digital Twin** of the uterus (`uterus.glb`) rendered with `Three.js`.
+    *   **Stiffness Mapping:** Dynamic color-coding (Green=Healthy, Red=Lesion) based on AI predictions.
+    *   **Lesion Markers:** 3D spatial markers identifying potential endometriosis sites.
+*   **Live Training Metrics:**
+    *   **Quantum Console Logs:** Streaming logs of training epochs and system events.
+    *   **Evolution Graph:** Real-time MSE and Physics Loss tracking.
+*   **Analytics Hub:**
+    *   **Longitudinal Trends:** Patient history tracking over time.
+    *   **Population Benchmarking:** Compare patient metrics against global cohorts.
+    *   **Physics Error Distribution:** Analysis of model adherence to physical constraints.
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+*   **Node.js 18+**
+*   **Python 3.9+**
+*   **Docker Desktop** (for full federated simulation)
 
-- **Docker Desktop** with Kubernetes enabled OR **Minikube**
-- **Python 3.9+**
-- **Node.js 18+**
-
-### Option 1: Automated Setup (Recommended)
+### 1. Installation
 
 ```bash
-# Run the setup script
+# Clone the repository
+git clone https://github.com/Slassh006/DigitalTwin.git
+cd DigitalTwin
+
+# Frontend Setup
+cd frontend
+npm install
+```
+
+### 2. Running the Application
+
+**Frontend (Console):**
+```bash
+cd frontend
+npm run dev
+# Access at http://localhost:3000
+```
+
+**Backend (Simulation):**
+The frontend includes a **Simulation Engine** that generates realistic data if the backend is offline. To run the full backend:
+```bash
 ./setup_infrastructure.sh
 ```
 
-This will:
-1. Start/verify Kubernetes cluster
-2. Build all Docker images
-3. Deploy services to Kubernetes
-4. Set up port forwarding
+---
 
-### Option 2: Manual Setup
+## 📂 Project Structure
 
-**1. Build Docker Images**
-```bash
-cd backend
-docker build -f Dockerfile.client -t imaging-node:latest .
-docker build -f Dockerfile.client -t clinical-node:latest .
-docker build -f Dockerfile.client -t pathology-node:latest .
-docker build -f Dockerfile.pinn -t pinn-server:latest .
 ```
-
-**2. Deploy to Kubernetes**
-```bash
-kubectl apply -f k8s/namespaces.yaml
-kubectl apply -f k8s/imaging-node/
-kubectl apply -f k8s/clinical-node/
-kubectl apply -f k8s/pathology-node/
-kubectl apply -f k8s/pinn-server/
-```
-
-**3. Start Frontend**
-```bash
-cd frontend
-npm install
-npm run dev
+H:/Akash/DigitalTwin/
+├── frontend/               # Next.js 14 Application
+│   ├── app/                # App Router (Pages)
+│   ├── components/         # React Components
+│   │   ├── three/          # 3D Visualization (DigitalTwinViewer)
+│   │   ├── training/       # Training Dashboard Panels
+│   │   └── analytics/      # Analytics Charts
+│   ├── lib/                # Utilities & API Clients
+│   └── public/
+│       └── models/         # 3D Assets (uterus.glb)
+├── backend/                # Python Microservices
+│   ├── pinn_server/        # Central Aggregator (FastAPI)
+│   └── clients/            # Federated Nodes
+└── k8s/                    # Kubernetes Deployment Manifests
 ```
 
 ---
 
-## 🔌 Accessing Services
+## 🛠️ Tech Stack
 
-**Frontend Dashboard:**
-```
-http://localhost:3000
-```
-
-**API Endpoints:**
-- Imaging Node: `http://localhost:8001`
-- Clinical Node: `http://localhost:8002`
-- Pathology Node: `http://localhost:8003`
-- PINN Server: `http://localhost:8004`
-
-**Kubernetes Port Forwarding:**
-```bash
-kubectl port-forward -n node-imaging svc/imaging-service 8001:8000
-kubectl port-forward -n node-clinical svc/clinical-service 8002:8000
-kubectl port-forward -n node-pathology svc/pathology-service 8003:8000
-kubectl port-forward -n central-pinn svc/pinn-service 8004:8000
-```
+*   **Frontend:** Next.js 14, React, TypeScript, Tailwind CSS, Framer Motion
+*   **Visualization:** React Three Fiber, Drei, Recharts
+*   **Backend:** Python, FastAPI, PyTorch
+*   **Infrastructure:** Docker, Kubernetes
 
 ---
 
-## 📊 Using the System
+## 🧬 Scientific Context
 
-### 1. Training Federated Nodes
-
-**Via Dashboard:**
-- Navigate to Dashboard → Click "Start Training"
-
-**Via API:**
-```bash
-# Train all nodes
-curl -X POST http://localhost:8001/train
-curl -X POST http://localhost:8002/train
-curl -X POST http://localhost:8003/train
-```
-
-### 2. Making Predictions
-
-```bash
-curl -X POST http://localhost:8004/predict \
-  -H "Content-Type: application/json" \
-  -d '{
-    "patient_id": "001"
-  }'
-```
-
-**Response:**
-```json
-{
-  "prediction": 0.73,
-  "stiffness": 6.2,
-  "confidence": 0.89,
-  "risk_level": "high"
-}
-```
-
-### 3. Viewing 3D Digital Twin
-
-- Navigate to `Simulation` page
-- Click "Load Patient"
-- Click "Simulate"
-- 3D uterus model will color-code based on stiffness prediction:
-  - **Red**: High stiffness (>5 kPa) - Endometriosis risk
-  - **Pink**: Moderate (2-5 kPa)
-  - **White**: Healthy (<2 kPa)
-
----
-
-## 🏗️ Architecture Details
-
-### Federated Learning Flow
-
-```
-User Dashboard
-     ↓
-   Trigger Training
-     ↓
-┌────────────────────────────────┐
-│  Imaging Node (namespace)      │ → Extracts 128-dim features
-│  Clinical Node (namespace)     │ → Extracts 64-dim features  
-│  Pathology Node (namespace)    │ → Extracts 64-dim features
-└────────────────────────────────┘
-     ↓ (Only Features Shared)
-┌────────────────────────────────┐
-│  Central PINN Server           │
-│  - Aggregates vectors          │
-│  - Applies Physics Loss        │
-│  - Generates Predictions       │
-└────────────────────────────────┘
-     ↓
-   Frontend 3D Viewer
-```
-
-### Physics-Informed Loss
-
-```python
-Total Loss = MSE_Loss + 0.1 × Physics_Constraint
-
-Physics Constraint:
-- If prediction = "Endometriosis" → stiffness must be > 5 kPa
-- If prediction = "Healthy" → stiffness must be < 2 kPa
-```
-
-This ensures medically plausible predictions based on tissue mechanics.
-
----
-
-## 🛠️ Development
-
-### Project Structure
-
-```
-DigitalTwin/
-├── k8s/                    # Kubernetes manifests
-├── backend/                # Python microservices
-│   ├── clients/           # Federated nodes
-│   ├── pinn_server/       # Central aggregator
-│   └── utils/             # Shared utilities
-├── frontend/              # Next.js dashboard
-└── data/                  # Your datasets (not in git)
-```
-
-### Tech Stack
-
-- **Infrastructure**: Kubernetes, Docker
-- **Backend**: Python 3.9, FastAPI, PyTorch
-- **Frontend**: Next.js 14, TypeScript, Shadcn UI, React Three Fiber
-- **Database**: SQLite (MVP), PostgreSQL (Production)
-
----
-
-## 📈 Monitoring
-
-**Check Pod Status:**
-```bash
-kubectl get pods --all-namespaces
-```
-
-**View Logs:**
-```bash
-kubectl logs -n node-imaging <pod-name>
-```
-
-**Check Services:**
-```bash
-kubectl get services --all-namespaces
-```
-
----
-
-## 🔐 Security & Compliance
-
-- **Data Isolation**: Each node runs in isolated Kubernetes namespace
-- **No Raw Data Sharing**: Only aggregated features leave federated nodes
-- **Audit Logs**: All predictions logged with timestamps
-- **Encryption**: TLS for all inter-service communication (production)
-
----
-
-## 📝 License
-
-MIT License - See LICENSE file for details
-
----
-
-## 🤝 Contributing
-
-This is a research project. For questions or collaboration:
-- Open an issue
-- Submit a pull request
-- Contact: [Your Email]
-
----
-
-## 🎓 References
-
-- Physics-Informed Neural Networks (PINNs)
-- Federated Learning for Healthcare
-- Tissue Elasticity Imaging
+The **Endotwin** platform addresses the critical need for non-invasive endometriosis diagnosis. By combining **Federated Learning** (to unlock siloed medical data) with **Physics-Informed Deep Learning** (to ensure reliability with limited data), we create a robust, privacy-preserving diagnostic tool. The **Digital Twin** visualization bridges the gap between AI output and clinical interpretation, allowing doctors to visualize tissue stiffness and potential lesions intuitively.
