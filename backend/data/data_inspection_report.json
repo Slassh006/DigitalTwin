@@ -1,0 +1,211 @@
+{
+  "pickle_files": {
+    "S2.pkl": {
+      "error": "No module named 'numpy'",
+      "filepath": "H:\\Downloads\\datasets\\sensor data\\Dataset-10\\WESAD\\S2\\S2\\S2.pkl"
+    },
+    "S9.pkl": {
+      "error": "No module named 'numpy'",
+      "filepath": "H:\\Downloads\\datasets\\sensor data\\Dataset-10\\WESAD\\S9\\S9.pkl"
+    }
+  },
+  "csv_schemas": {
+    "schema_1": {
+      "columns": [
+        "class_name",
+        "xmax",
+        "xmin",
+        "ymax",
+        "ymin"
+      ],
+      "num_files": 30,
+      "examples": [
+        "003ab8b5-cf6d-442a-849d-80ddf0d1edaf.csv",
+        "003f46f1-e447-486a-aeb7-6bf8b45a2184.csv",
+        "00be7d4a-d643-4075-9ea3-e5bff2cd9a5c.csv"
+      ]
+    }
+  },
+  "dataset_mapping": {
+    "imaging": {
+      "files": [
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\icpr2020-endotect.pdf",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-4\\Glenda_v1.5_classes\\labels.txt",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-4\\Glenda_v1.5_classes\\label_colors.html",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\annotated_images\\cju1f15k3w4ct0835cmde6ypo.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\annotated_images\\cju1ffnjn6ctm08015perkg37.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\annotated_images\\cju34fojcctcf0799ebolbvkn.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\annotated_images\\cju5eftctcdbj08712gdp989f.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\annotated_images\\cju5f0dezct4q08183ydw11dx.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\annotated_images\\cju7ctvqn25dy08186g442m1r.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\annotated_images\\cju8bpctzrqkr0850zeldv9kt.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\bbox\\cju1f15k3w4ct0835cmde6ypo.csv",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\bbox\\cju1ffnjn6ctm08015perkg37.csv",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\bbox\\cju34fojcctcf0799ebolbvkn.csv",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\bbox\\cju5eftctcdbj08712gdp989f.csv",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\bbox\\cju5f0dezct4q08183ydw11dx.csv",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\bbox\\cju7ctvqn25dy08186g442m1r.csv",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\bbox\\cju8bpctzrqkr0850zeldv9kt.csv",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\images\\cju1f15k3w4ct0835cmde6ypo.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\images\\cju1ffnjn6ctm08015perkg37.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\images\\cju34fojcctcf0799ebolbvkn.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\images\\cju5eftctcdbj08712gdp989f.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\images\\cju5f0dezct4q08183ydw11dx.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\images\\cju7ctvqn25dy08186g442m1r.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\images\\cju8bpctzrqkr0850zeldv9kt.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\masks\\cju1f15k3w4ct0835cmde6ypo.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\masks\\cju1ffnjn6ctm08015perkg37.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\masks\\cju34fojcctcf0799ebolbvkn.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\masks\\cju5eftctcdbj08712gdp989f.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\masks\\cju5f0dezct4q08183ydw11dx.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\masks\\cju7ctvqn25dy08186g442m1r.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\Training dataset (Kvasir-SEG)\\masks\\cju8bpctzrqkr0850zeldv9kt.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-5\\Uterus.v3i.coco\\train\\_annotations.coco.json",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\003ab8b5-cf6d-442a-849d-80ddf0d1edaf.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\003f46f1-e447-486a-aeb7-6bf8b45a2184.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\00be7d4a-d643-4075-9ea3-e5bff2cd9a5c.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\00c7089c-caf9-4c1b-850f-bedbb11668fc.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\01deb8d0-4bc5-4092-9a76-9f5c2f74f0df.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\02ae2444-eddf-4fec-8b87-babc265d1553.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\02c9cc1e-349a-4689-bfb4-b7df1f44ca53.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\02d64f66-07e3-4e32-8ecd-5fec7e8acdba.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\02e05e0f-5335-4d25-b41b-8f3181fa8941.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\03a74938-0db3-4544-9a1a-e74121c47a9a.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\03b5d73c-d096-4d5c-af50-39c218425fcd.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\03b7f01a-8122-4cdf-8ddc-2b052f4b4099.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\03e15c74-4234-4074-bd5b-b4b81834d3d6.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\04c3a34e-a160-4421-827e-89671761ef82.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\05ae2939-4da1-41de-8bf8-0b225eba2d60.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\05f22ee2-e097-400c-8fcf-07a35e404bef.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0a25da23-787f-47ce-877e-2934275b0801.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0a2fd84b-e62b-4153-beab-75d7d8757f75.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0a3f577c-5f57-452d-8ae2-c5e042079467.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0a508419-ba4f-428c-9a30-43feb39c35c2.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0a64434b-f2aa-4e8c-be2e-aaefeaea1951.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0a64cf79-80be-436a-bb3d-978b586a4a4a.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0a861d21-a718-426c-9003-d01ecd014dda.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0a945e9c-17ec-4879-9c51-5601bae0aa3c.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0ab286ad-3b4f-4c5d-af02-314a2f41a518.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0abee68d-f929-4da9-90b3-dcde15f06ef8.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0b08ec01-337a-4f20-a4d7-43313d0724a6.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0b12103e-e05e-45b4-8388-fb9f3b19a910.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0b3d19a0-b2b1-4458-a57a-27d218a42969.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0b784b2a-1606-445c-bbb6-f731a4fddbf8.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0b8010cc-0c08-4ada-96b7-5d85a9b392fa.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0bb3109e-c94e-4314-9154-450c0754dedd.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0bcff559-6d11-4eef-9b2f-815aff1525d8.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0beee07d-9c87-4228-adde-d8e226aea725.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0c12ae3c-5e78-479b-adde-a2d456eb4e64.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0c14dad4-9994-4c58-8172-3131169b7471.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0c449477-fc39-45cc-924c-4f81a1676fbd.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0c62e786-7989-4d8b-a384-932aba030e16.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0c6e6469-fa81-44d0-b30e-a10a6aa102de.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0c743545-4bab-4174-8ede-4a553c283ba3.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0ca5ff19-05e7-48ac-b738-af56a47f1d19.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0cb52cde-7faf-4359-96f4-c2cb3ed32819.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0cf59388-36a8-49d6-934f-cbbd1364d93c.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0d09188c-9307-4104-9154-fa32669c36fb.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0d403d47-85bd-434a-8b3f-e2d3c59bfa9b.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0d99e1f5-5a21-4b06-9524-3d16bd7d1eff.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0db231c1-0412-41a9-b902-ede14b1050aa.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0dcfc0b4-844c-49c6-b329-3ff896cf941c.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0dd5db3f-ebd2-4e1c-ae32-aec49ed631a5.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0deb8435-e1fb-41c5-b281-3e8e566bb126.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0df243c5-ca45-4e4f-8013-ba09437d62b1.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0e577e7c-2d63-419f-9277-c7aa18ef7d2d.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0e7f98b4-d726-4287-a53f-8de528c0ca28.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0e92b2a9-2340-4f65-b68d-76f1d09bf3db.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0ea16eea-17f1-46a1-bf04-1dd15bcc8185.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0ea7527e-de2b-4f2a-bcb4-dc37ae1888b6.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0ebe7f2f-0a19-4ce8-b58f-2189c22dba64.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0ee7c51a-9a17-43cf-8a29-d79ba78f008b.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0ef6ab1d-2a5f-47d7-b84c-611a0f26e527.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0effbaf1-eb19-4f97-b7d5-39ba2de47c91.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0f118e83-6cda-4dce-b6ca-1be1d72fa8e9.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0f17e181-13dc-44f9-ae84-ccfbc1dcff6f.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0f64a728-8a8a-430d-8584-e93ed71d8f8a.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0fa67b7f-16d5-44b1-9473-8080cd170598.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\0ffa9cc0-eeda-4d7e-aca3-81ceec7543d1.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1a021d56-c09f-4444-b4ab-c80f2be0e6a7.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1a1324b1-f4ee-4fbd-b23e-3d2914c07647.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1a2b231e-6394-480a-bcfa-03c427e1d91f.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1a5380d4-651a-42fc-b8c2-d28f9039782c.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1a74b671-36a6-4788-8ea2-2dc74746a86b.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1a972bcc-832f-4207-a1a5-0df314e97a53.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1aab2fe2-36b4-4a78-81cb-99a3faeab9b5.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1aba5353-d5a2-42e3-ad7f-720405d3cdce.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1b3165c1-3a4c-4f53-892b-27d309af1277.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1b6bbfbd-36d1-4bd6-9e32-03efbde62264.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1b6c1916-0415-4a4d-a80c-45f68bc68a9a.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1b978c18-750d-4a5c-94f9-977e9aff5585.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1c4ef1be-c550-4825-8d23-e3abf30642d7.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1c523e93-3a01-4bb5-a978-c1bcb2a472b5.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1cb309ae-4e7e-402a-b2ca-d5977ba61545.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1cdc7f16-665f-4009-a725-117768f49b57.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1ce69979-4261-4a14-979a-797fae297ea2.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1d05d79d-da31-4fc1-9dac-0f484c60180c.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1d3415d5-000a-4008-b473-8be912823203.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1d3aa9c0-c61a-4cff-b052-f05f2979dff6.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1da5a135-6978-4ea7-b978-4f0102e9bc88.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1dc471c8-3977-4f44-b911-212fae1801f3.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1dfa891d-6c48-4735-97fe-22b56fb4807a.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1dfdb283-78f0-4989-a35e-3cbe52bfa10e.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1e39d517-81be-4e31-b43e-7cab37d20444.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1e7efbd0-e245-4731-9186-54da7d9a6536.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1ee852b7-8c16-4f53-be89-1420bc90e38b.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1ef34889-08a2-4db9-8451-3ac5acf9b258.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1f9de837-f663-45ab-bb35-68233c8119e7.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1fb09ac3-7347-4aaa-9b9e-e7c51ce3c643.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1fb34ce4-3067-42ff-b941-b887177d0d2b.jpg",
+        "H:\\Downloads\\datasets\\medical imaging\\Dataset-3\\EndoTect\\test dataset\\annotated_images\\1fd8eace-a737-45ab-b556-d1ade2738612.jpg"
+      ],
+      "description": "Medical images for lesion detection",
+      "formats": [
+        ".jpg",
+        ".png"
+      ],
+      "total_files": 129
+    },
+    "clinical": {
+      "files": [
+        "H:\\Downloads\\datasets\\patient Records\\Dataset-8\\Characteristics of women with an endometriosis diagnosis.xlsx",
+        "H:\\Downloads\\datasets\\patient Records\\Dataset-9\\structured_endometriosis_data.csv"
+      ],
+      "description": "Patient clinical records",
+      "formats": [
+        ".csv",
+        ".xlsx"
+      ],
+      "total_files": 2
+    },
+    "pathology": {
+      "files": [
+        "H:\\Downloads\\datasets\\pathology reports\\Dataset-6\\Table_1_Gut Microbiota Exceeds Cervical Microbiota for Early Diagnosis of Endometriosis.xlsx"
+      ],
+      "description": "Pathology and biomarker data",
+      "formats": [
+        ".csv",
+        ".xlsx"
+      ],
+      "total_files": 1
+    },
+    "sensors": {
+      "files": [],
+      "description": "Physiological sensor data (WESAD)",
+      "formats": [
+        ".pkl",
+        ".csv",
+        ".txt"
+      ],
+      "total_files": 0
+    },
+    "preprocessed": {
+      "files": [],
+      "description": "Pre-processed feature embeddings",
+      "formats": [
+        ".pkl"
+      ],
+      "total_files": 0
+    }
+  }
+}

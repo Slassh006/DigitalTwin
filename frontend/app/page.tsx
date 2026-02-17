@@ -1,167 +1,39 @@
-"use client"
+import Header from "@/components/header-new"
+import FederatedNodesPanel from "@/components/federated-nodes-panel"
+import PredictionEnginePanel from "@/components/prediction-engine-panel"
+import TrainingMetricsDashboard from "@/components/training-metrics-dashboard"
+import HolographicViewer from "@/components/three/holographic-viewer-new"
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { NetworkStatusCard } from "@/components/dashboard/network-status-card";
-import { TrainingChart } from "@/components/dashboard/training-chart";
-import { MetricsOverview } from "@/components/dashboard/metrics-overview";
-import { Button } from "@/components/ui/button";
-import { getNodeStatus, trainFederatedNodes } from "@/lib/api";
-import { useToast } from "@/components/ui/use-toast";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2 } from "lucide-react";
-import { fadeIn, staggerContainer, staggerItem } from "@/lib/animations";
-
-export default function DashboardPage() {
-    const [isTraining, setIsTraining] = useState(false);
-    const [nodes, setNodes] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const { toast } = useToast();
-
-    useEffect(() => {
-        // Fetch node status on mount
-        loadNodeStatus();
-
-        // Poll every 5 seconds
-        const interval = setInterval(loadNodeStatus, 5000);
-        return () => clearInterval(interval);
-    }, []);
-
-    const loadNodeStatus = async () => {
-        try {
-            const data = await getNodeStatus();
-            setNodes(data.nodes);
-            setIsLoading(false);
-        } catch (error) {
-            console.error("Failed to load node status:", error);
-            setIsLoading(false);
-        }
-    };
-
-    const handleStartTraining = async () => {
-        setIsTraining(true);
-
-        try {
-            await trainFederatedNodes(10);
-
-            toast({
-                title: "Training Started",
-                description: "Federated training initiated on all nodes",
-            });
-
-            // Reload node status
-            setTimeout(loadNodeStatus, 1000);
-
-        } catch (error) {
-            toast({
-                title: "Training Failed",
-                description: "Could not start federated training",
-                variant: "destructive",
-            });
-        } finally {
-            setIsTraining(false);
-        }
-    };
-
+export default function Home() {
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <motion.div
-                className="flex justify-between items-center"
-                variants={fadeIn}
-                initial="hidden"
-                animate="visible"
-            >
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Federated Learning Network Overview
-                    </p>
+        <div className="flex flex-col min-h-screen md:h-screen md:overflow-hidden bg-background-dark text-white font-body selection:bg-primary selection:text-white">
+            {/* Top Header */}
+            <Header />
+
+            {/* Main Content Grid */}
+            <main className="flex-1 p-4 grid grid-cols-12 md:grid-rows-12 gap-4 h-auto md:h-full md:overflow-hidden">
+
+                {/* LEFT PANEL: Federated Data Nodes (Spans 8 rows height) */}
+                <div className="col-span-12 md:col-span-3 md:row-span-8 min-h-[300px] md:min-h-0">
+                    <FederatedNodesPanel />
                 </div>
 
-                <Button
-                    onClick={handleStartTraining}
-                    disabled={isTraining}
-                    size="lg"
-                    className="transition-all duration-200 hover:scale-105"
-                >
-                    {isTraining ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Training...
-                        </>
-                    ) : (
-                        "Start Training"
-                    )}
-                </Button>
-            </motion.div>
+                {/* CENTER PANEL: 3D Visualization (Spans 8 rows height) */}
+                <div className="col-span-12 md:col-span-6 md:row-span-8 min-h-[400px] md:min-h-0">
+                    <HolographicViewer />
+                </div>
 
-            {/* Metrics Overview */}
-            <motion.div
-                variants={fadeIn}
-                initial="hidden"
-                animate="visible"
-                transition={{ delay: 0.1 }}
-            >
-                <MetricsOverview />
-            </motion.div>
+                {/* RIGHT PANEL: Prediction Metrics (Spans 8 rows height) */}
+                <div className="col-span-12 md:col-span-3 md:row-span-8 min-h-[300px] md:min-h-0">
+                    <PredictionEnginePanel />
+                </div>
 
-            {/* Federated Network Status */}
-            <motion.div
-                variants={fadeIn}
-                initial="hidden"
-                animate="visible"
-                transition={{ delay: 0.2 }}
-            >
-                <h2 className="text-xl font-semibold mb-4">Federated Network Status</h2>
-                {isLoading ? (
-                    <div className="grid gap-4 md:grid-cols-3">
-                        {[1, 2, 3].map((i) => (
-                            <Card key={i} className="p-6">
-                                <Skeleton className="h-6 w-32 mb-4" />
-                                <Skeleton className="h-4 w-full mb-2" />
-                                <Skeleton className="h-4 w-24" />
-                            </Card>
-                        ))}
-                    </div>
-                ) : nodes.length > 0 ? (
-                    <motion.div
-                        className="grid gap-4 md:grid-cols-3"
-                        variants={staggerContainer}
-                        initial="hidden"
-                        animate="visible"
-                    >
-                        {nodes.map((node, index) => (
-                            <motion.div key={node.name} variants={staggerItem}>
-                                <NetworkStatusCard
-                                    nodeName={node.name}
-                                    nodeType={node.name.toLowerCase()}
-                                    status={node.status}
-                                    isTraining={node.is_training}
-                                />
-                            </motion.div>
-                        ))}
-                    </motion.div>
-                ) : (
-                    <Card className="p-8 text-center">
-                        <p className="text-muted-foreground">
-                            Loading federated nodes... Ensure backend services are running.
-                        </p>
-                    </Card>
-                )}
-            </motion.div>
+                {/* BOTTOM PANEL: Training Dashboard (Spans 4 rows height) */}
+                <div className="col-span-12 md:row-span-4 min-h-[250px] md:min-h-0">
+                    <TrainingMetricsDashboard />
+                </div>
 
-            {/* Real-Time Training Chart */}
-            <motion.div
-                variants={fadeIn}
-                initial="hidden"
-                animate="visible"
-                transition={{ delay: 0.3 }}
-            >
-                <h2 className="text-xl font-semibold mb-4">Real-Time Training</h2>
-                <TrainingChart />
-            </motion.div>
+            </main>
         </div>
-    );
+    )
 }

@@ -29,6 +29,9 @@ from utils.mesh_generator import (
     generate_stiffness_map,
     mesh_to_glb_bytes
 )
+from utils.patient_manager import patient_manager
+from utils.settings_manager import settings_manager
+from utils.training_history_manager import training_history_manager
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -320,20 +323,28 @@ async def train_federated(request: TrainRequest, background_tasks: BackgroundTas
         if not (imaging_ok and clinical_ok and pathology_ok):
             logger.warning("Some nodes did not start training successfully")
         
-        # 2. Simulate central model training
+        # 2. Train central model with REAL data
+        from utils.data_loader import get_train_val_loaders
+        
         optimizer = torch.optim.Adam(model.parameters(), lr=request.learning_rate)
         loss_fn = PINNLoss(lambda_physics=0.1, lambda_elastic=0.05)
         
+        # Get real data loaders
+        train_loader, val_loader = get_train_val_loaders(batch_size=request.batch_size)
+        
         model.train()
+        epoch_history = []
         
         for epoch in range(request.epochs):
-            # Generate mock training data
-            batch_size = request.batch_size
+            epoch_loss = 0.0
+            num_batches = 0
             
-            imaging_batch = torch.randn(batch_size, 128).to(device)
-            clinical_batch = torch.randn(batch_size, 64).to(device)
-            pathology_batch = torch.randn(batch_size, 64).to(device)
-            labels = torch.randint(0, 2, (batch_size, 1)).float().to(device)
+            for batch in train_loader:
+                # Get REAL patient data from batch
+                imaging_batch = batch['imaging'].to(device)
+                clinical_batch = batch['clinical'].to(device)
+                pathology_batch = batch['pathology'].to(device)
+                labels = batch['labels'].to(device)
             
             # Forward pass
             prediction, stiffness = model(imaging_batch, clinical_batch, pathology_batch)
@@ -488,6 +499,127 @@ async def get_node_status():
         })
     
     return {"nodes": statuses}
+
+
+# ==================== Patient Management Endpoints ====================
+
+@app.post("/patients")
+async def create_patient(patient_data: dict):
+    """Create a new patient record."""
+    try:
+        patient = patient_manager.create_patient(patient_data)
+        return patient
+    except Exception as e:
+        logger.error(f"Error creating patient: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/patients")
+async def list_patients():
+    """Get all patient records."""
+    try:
+        patients = patient_manager.list_patients()
+        return {"patients": patients, "count": len(patients)}
+    except Exception as e:
+        logger.error(f"Error listing patients: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/patients/{patient_id}")
+async def get_patient(patient_id: str):
+    """Get a specific patient by ID."""
+    patient = patient_manager.get_patient(patient_id)
+    if patient is None:
+        raise HTTPException(status_code=404, detail=f"Patient {patient_id} not found")
+    return patient
+
+
+@app.put("/patients/{patient_id}")
+async def update_patient(patient_id: str, patient_data: dict):
+    """Update a patient record."""
+    patient = patient_manager.update_patient(patient_id, patient_data)
+    if patient is None:
+        raise HTTPException(status_code=404, detail=f"Patient {patient_id} not found")
+    return patient
+
+
+@app.delete("/patients/{patient_id}")
+async def delete_patient(patient_id: str):
+    """Delete a patient record."""
+    success = patient_manager.delete_patient(patient_id)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Patient {patient_id} not found")
+    return {"message": f"Patient {patient_id} deleted successfully"}
+
+
+# ==================== Settings Management Endpoints ====================
+
+@app.get("/config")
+async def get_config():
+    """Get current application settings."""
+    try:
+        settings = settings_manager.get_settings()
+        return settings
+    except Exception as e:
+        logger.error(f"Error getting settings: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/config")
+async def update_config(settings_data: dict):
+    """Update application settings."""
+    try:
+        settings = settings_manager.update_settings(settings_data)
+        logger.info(f"Settings updated: {settings}")
+        return settings
+    except Exception as e:
+        logger.error(f"Error updating settings: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/config/defaults")
+async def get_default_config():
+    """Get default settings."""
+    return settings_manager.get_defaults()
+
+
+# ==================== Analytics & Training History Endpoints ====================
+
+@app.get("/training/history")
+async def get_training_history():
+    """Get all training runs and their metrics."""
+    try:
+        runs = training_history_manager.get_all_runs()
+        return {"training_runs": runs, "count": len(runs)}
+    except Exception as e:
+        logger.error(f"Error getting training history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/analytics/metrics")
+async def get_analytics_metrics():
+    """Get current model performance metrics and node contributions."""
+    try:
+        metrics = training_history_manager.get_metrics()
+        latest_run = training_history_manager.get_latest_run()
+        
+        # Calculate node contributions (mock for now)
+        node_performance = {
+            "imaging": {"contribution": 0.42, "accuracy": 0.88},
+            "clinical": {"contribution": 0.31, "accuracy": 0.84},
+            "pathology": {"contribution": 0.27, "accuracy": 0.91}
+        }
+        
+        return {
+            "model_metrics": metrics,
+            "latest_run": latest_run,
+            "node_performance": node_performance,
+            "total_predictions": prediction_count,
+            "total_epochs_trained": total_epochs_trained
+        }
+    except Exception as e:
+        logger.error(f"Error getting analytics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ==================== Startup ====================

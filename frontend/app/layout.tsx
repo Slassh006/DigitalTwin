@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Sidebar } from "@/components/sidebar";
-import { Header } from "@/components/header";
+
 import { ToastProviderWrapper } from "@/components/ui/use-toast";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -36,15 +35,9 @@ export default function RootLayout({
                     </a>
 
                     <ToastProviderWrapper>
-                        <div className="flex h-screen overflow-hidden">
-                            <Sidebar />
-                            <div className="flex flex-col flex-1 overflow-hidden">
-                                <Header />
-                                <main className="flex-1 overflow-y-auto bg-background p-6 md:ml-64">
-                                    {children}
-                                </main>
-                            </div>
-                        </div>
+                        <main className="h-screen w-screen overflow-hidden bg-[#0f0f13]">
+                            {children}
+                        </main>
                     </ToastProviderWrapper>
                 </ThemeProvider>
             </body>

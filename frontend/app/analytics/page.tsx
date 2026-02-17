@@ -1,89 +1,49 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, TrendingUp, Activity } from "lucide-react";
+import { motion } from "framer-motion"
+import Header from "@/components/header-new"
+import LongitudinalTrendAnalysis from "@/components/analytics/longitudinal-trend-analysis"
+import AIInsightsPanel from "@/components/analytics/ai-insights-panel"
+import BiomarkerSensitivity from "@/components/analytics/biomarker-sensitivity"
+import PopulationBenchmarking from "@/components/analytics/population-benchmarking"
+import PhysicsErrorDist from "@/components/analytics/physics-error-dist"
 
 export default function AnalyticsPage() {
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
-                <p className="text-muted-foreground mt-1">
-                    Training metrics and model performance insights
-                </p>
-            </div>
+        <div className="text-white font-body h-screen flex flex-col overflow-hidden bg-background-dark bg-[url('/grid-pattern.png')]">
+            <Header />
 
-            {/* Placeholder Cards */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Model Accuracy</CardTitle>
-                        <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">--</div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Train the model to see accuracy metrics
-                        </p>
-                    </CardContent>
-                </Card>
+            <motion.main
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex-1 p-4 grid grid-cols-12 grid-rows-12 gap-4 h-full overflow-hidden"
+            >
+                {/* 1. Longitudinal Trend Analysis (Top Left, 9x7) */}
+                <div className="col-span-12 lg:col-span-9 row-span-7 h-full min-h-0">
+                    <LongitudinalTrendAnalysis />
+                </div>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Training History</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">--</div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Historical training runs and metrics
-                        </p>
-                    </CardContent>
-                </Card>
+                {/* 2. AI Insights Panel (Right Sidebar, 3x12) */}
+                <div className="col-span-12 lg:col-span-3 row-span-12 h-full min-h-0">
+                    <AIInsightsPanel />
+                </div>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Prediction Stats</CardTitle>
-                        <Activity className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">--</div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Prediction distribution and confidence scores
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
+                {/* 3. Biomarker Sensitivity (Bottom Left 1, 3x5) */}
+                <div className="col-span-12 md:col-span-4 lg:col-span-3 row-span-5 h-full min-h-0">
+                    <BiomarkerSensitivity />
+                </div>
 
-            {/* Main Content Placeholder */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Advanced Analytics Dashboard</CardTitle>
-                    <CardDescription>
-                        Detailed analytics and insights will be available here, including:
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                        <li>Training loss curves across all federated nodes</li>
-                        <li>Model performance metrics (precision, recall, F1-score)</li>
-                        <li>Prediction confidence distributions</li>
-                        <li>Stiffness value histograms</li>
-                        <li>Node contribution analysis</li>
-                        <li>Federated learning convergence metrics</li>
-                        <li>Data quality indicators</li>
-                    </ul>
+                {/* 4. Population Benchmarking (Bottom Middle, 3x5) */}
+                <div className="col-span-12 md:col-span-4 lg:col-span-3 row-span-5 h-full min-h-0">
+                    <PopulationBenchmarking />
+                </div>
 
-                    <div className="mt-6 p-4 bg-muted rounded-lg">
-                        <p className="text-sm font-medium">Implementation Note:</p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            This page is a placeholder. To implement full analytics, integrate with the backend's training history
-                            endpoints and add visualization libraries like D3.js or additional Recharts components.
-                        </p>
-                    </div>
-                </CardContent>
-            </Card>
+                {/* 5. Physics Error Dist (Bottom Right of Left Block, 3x5) */}
+                <div className="col-span-12 md:col-span-4 lg:col-span-3 row-span-5 h-full min-h-0">
+                    <PhysicsErrorDist />
+                </div>
+            </motion.main>
         </div>
-    );
+    )
 }

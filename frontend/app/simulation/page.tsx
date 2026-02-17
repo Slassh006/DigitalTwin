@@ -85,7 +85,8 @@ export default function SimulationPage() {
                     <Card className="h-full p-6">
                         <DigitalTwinViewer
                             stiffness={prediction?.stiffness || 2.0}
-                            meshUrl={prediction?.mesh_url || `${process.env.NEXT_PUBLIC_API_URL}/mesh`}
+                            meshUrl={prediction?.mesh_url}
+                            predictionData={prediction}
                         />
                     </Card>
                 </div>

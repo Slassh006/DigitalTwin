@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Advanced Predictive Analytics Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7311d4",
+                        "primary-dark": "#4a0b8a",
+                        "background-light": "#f7f6f8",
+                        "background-dark": "#0f0f13",
+                        "panel-bg": "rgba(26, 17, 34, 0.75)",
+                        "accent-cyan": "#00f0ff",
+                        "accent-magenta": "#ff0055",
+                        "success": "#0bda73",
+                        "warning": "#f59e0b",
+                    },
+                    fontFamily: {
+                        "display": ["Orbitron", "sans-serif"],
+                        "body": ["Space Grotesk", "sans-serif"],
+                        "mono": ["Space Mono", "monospace"],
+                    },
+                    boxShadow: {
+                        'neon-cyan': '0 0 5px #00f0ff, 0 0 10px #00f0ff',
+                        'neon-magenta': '0 0 5px #ff0055, 0 0 10px #ff0055',
+                        'neon-primary': '0 0 5px #7311d4, 0 0 20px rgba(115, 17, 212, 0.5)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0f0f13;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(115, 17, 212, 0.15) 0%, transparent 50%),
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+        }
+        .glass-panel {
+            background: rgba(20, 15, 28, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(115, 17, 212, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+        .chart-grid {
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }.custom-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #4d3267;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="text-white font-body h-screen flex flex-col overflow-hidden">
+<header class="flex-none flex items-center justify-between border-b border-[#362348] bg-[#1a1122]/90 backdrop-blur-md px-6 py-3 z-50">
+<div class="flex items-center gap-4 text-white">
+<div class="size-8 text-accent-cyan">
+<span class="material-symbols-outlined text-3xl">analytics</span>
+</div>
+<div class="flex flex-col">
+<h2 class="text-white text-lg font-display tracking-wider font-bold leading-tight">ENDOTWIN <span class="text-accent-magenta font-light">ANALYTICS HUB</span></h2>
+<span class="text-[10px] text-gray-400 tracking-[0.2em] uppercase">Predictive Modeling v2.4</span>
+</div>
+</div>
+<div class="flex flex-1 justify-center gap-8 px-8">
+<nav class="hidden md:flex items-center gap-1 bg-black/20 p-1 rounded-full border border-white/5">
+<a class="px-5 py-1.5 rounded-full text-gray-400 text-sm font-medium hover:text-white hover:bg-white/5 transition-all" href="#">Dashboard</a>
+<a class="px-5 py-1.5 rounded-full text-sm font-medium transition-all bg-accent-magenta/20 text-white shadow-neon-magenta border border-accent-magenta/50" href="#">Predictive Analytics</a>
+<a class="px-5 py-1.5 rounded-full text-gray-400 text-sm font-medium hover:text-white hover:bg-white/5 transition-all" href="#">Patient Cohorts</a>
+<a class="px-5 py-1.5 rounded-full text-gray-400 text-sm font-medium hover:text-white hover:bg-white/5 transition-all" href="#">Settings</a>
+</nav>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-md border border-accent-cyan/30 bg-accent-cyan/10">
+<div class="w-2 h-2 rounded-full bg-accent-cyan animate-pulse"></div>
+<span class="text-xs font-mono text-accent-cyan uppercase tracking-wider">Model Live</span>
+</div>
+<button class="flex items-center justify-center size-9 rounded-lg hover:bg-[#362348] text-gray-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+<div class="h-6 w-px bg-[#362348] mx-1"></div>
+<button class="flex items-center gap-2 pl-2">
+<div class="size-8 rounded-full bg-gradient-to-tr from-primary to-accent-magenta p-[1px]">
+<div class="w-full h-full rounded-full bg-[#1a1122] flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">person</span>
+</div>
+</div>
+<div class="hidden lg:flex flex-col items-start">
+<span class="text-xs font-bold leading-none">Dr. A. Vance</span>
+<span class="text-[10px] text-gray-500 leading-none mt-1">Lead Researcher</span>
+</div>
+</button>
+</div>
+</header>
+<main class="flex-1 p-4 grid grid-cols-12 grid-rows-12 gap-4 h-full overflow-hidden">
+<section class="col-span-12 lg:col-span-9 row-span-7 glass-panel rounded-xl flex flex-col overflow-hidden relative group">
+<div class="p-4 border-b border-white/5 flex items-center justify-between bg-black/20">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-accent-cyan">timeline</span>
+<h3 class="font-display text-sm tracking-widest text-white uppercase">Longitudinal Trend Analysis</h3>
+</div>
+<div class="flex gap-2">
+<div class="flex items-center gap-2 px-2">
+<span class="w-3 h-0.5 bg-accent-cyan"></span>
+<span class="text-[10px] uppercase text-gray-400">Probability Score</span>
+</div>
+<div class="flex items-center gap-2 px-2">
+<span class="w-3 h-0.5 bg-accent-magenta"></span>
+<span class="text-[10px] uppercase text-gray-400">Tissue Stiffness (kPa)</span>
+</div>
+<select class="bg-black/40 border border-white/10 text-xs text-gray-300 rounded px-2 py-1 outline-none focus:border-primary">
+<option>Last 12 Months</option>
+<option>Last 24 Months</option>
+<option>All History</option>
+</select>
+</div>
+</div>
+<div class="flex-1 relative p-4 chart-grid">
+<div class="absolute left-4 top-4 bottom-8 flex flex-col justify-between text-[10px] text-gray-500 font-mono h-[calc(100%-40px)]">
+<span>1.0</span><span>0.8</span><span>0.6</span><span>0.4</span><span>0.2</span><span>0.0</span>
+</div>
+<div class="absolute right-4 top-4 bottom-8 flex flex-col justify-between text-[10px] text-gray-500 font-mono h-[calc(100%-40px)] text-right">
+<span>50kPa</span><span>40kPa</span><span>30kPa</span><span>20kPa</span><span>10kPa</span><span>0kPa</span>
+</div>
+<div class="absolute inset-0 left-12 right-12 top-4 bottom-8">
+<svg class="w-full h-full overflow-visible" preserveAspectRatio="none">
+<line stroke="rgba(255,255,255,0.05)" stroke-dasharray="4" x1="0" x2="100%" y1="0%" y2="0%"></line>
+<line stroke="rgba(255,255,255,0.05)" stroke-dasharray="4" x1="0" x2="100%" y1="20%" y2="20%"></line>
+<line stroke="rgba(255,255,255,0.05)" stroke-dasharray="4" x1="0" x2="100%" y1="40%" y2="40%"></line>
+<line stroke="rgba(255,255,255,0.05)" stroke-dasharray="4" x1="0" x2="100%" y1="60%" y2="60%"></line>
+<line stroke="rgba(255,255,255,0.05)" stroke-dasharray="4" x1="0" x2="100%" y1="80%" y2="80%"></line>
+<line stroke="rgba(255,255,255,0.05)" stroke-dasharray="4" x1="0" x2="100%" y1="100%" y2="100%"></line>
+<path class="drop-shadow-[0_0_8px_rgba(0,240,255,0.5)]" d="M0,80 C50,75 100,70 150,65 C200,60 250,55 300,45 C350,35 400,30 450,25 C500,20 550,15 600,10 L800,5" fill="none" stroke="#00f0ff" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+<path d="M0,80 C50,75 100,70 150,65 C200,60 250,55 300,45 C350,35 400,30 450,25 C500,20 550,15 600,10 L800,5 L800,100 L0,100 Z" fill="url(#gradCyan)" opacity="0.1"></path>
+<path d="M0,90 C50,88 100,85 150,80 C200,75 250,70 300,65 C350,60 400,50 450,45 C500,40 550,35 600,30 L800,20" fill="none" stroke="#ff0055" stroke-dasharray="5,5" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+<defs>
+<linearGradient id="gradCyan" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#00f0ff" stop-opacity="0.5"></stop>
+<stop offset="100%" stop-color="#00f0ff" stop-opacity="0"></stop>
+</linearGradient>
+</defs>
+<circle class="animate-pulse shadow-[0_0_10px_#00f0ff]" cx="60%" cy="25%" fill="#00f0ff" r="4"></circle>
+<line stroke="rgba(255,255,255,0.2)" stroke-dasharray="2,2" x1="60%" x2="60%" y1="0" y2="100%"></line>
+</svg>
+<div class="absolute left-[61%] top-[20%] bg-black/80 backdrop-blur border border-accent-cyan/50 p-2 rounded text-xs z-10">
+<div class="text-accent-cyan font-bold mb-1">Month 8 Prediction</div>
+<div class="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
+<span class="text-gray-400">Prob:</span> <span class="text-white text-right">0.82</span>
+<span class="text-gray-400">Stiff:</span> <span class="text-white text-right">38kPa</span>
+</div>
+</div>
+</div>
+<div class="absolute left-12 right-12 bottom-2 flex justify-between text-[10px] text-gray-500 font-mono">
+<span>JAN</span><span>FEB</span><span>MAR</span><span>APR</span><span>MAY</span><span>JUN</span><span>JUL</span><span>AUG</span><span>SEP</span><span>OCT</span><span>NOV</span><span>DEC</span>
+</div>
+</div>
+</section>
+<aside class="col-span-12 lg:col-span-3 row-span-12 glass-panel rounded-xl flex flex-col p-1 border-l-2 border-l-primary/50">
+<div class="p-4 border-b border-white/5 bg-gradient-to-r from-primary/10 to-transparent">
+<h3 class="font-display text-sm tracking-widest text-accent-cyan uppercase flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">psychology</span>
+                    AI Insights
+                </h3>
+</div>
+<div class="flex-1 overflow-y-auto custom-scroll p-4 space-y-4">
+<div class="bg-black/40 border border-accent-magenta/30 rounded-lg p-3 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-1">
+<span class="material-symbols-outlined text-accent-magenta text-opacity-50 text-4xl -mr-2 -mt-2">warning</span>
+</div>
+<h4 class="text-accent-magenta text-xs font-bold uppercase mb-2 tracking-wider">High Risk Alert</h4>
+<p class="text-xs text-gray-300 leading-relaxed">
+                        Rapid increase in tissue stiffness (<span>Δ</span> +12%) detected in the uterosacral ligament zone over the last 3 months.
+                    </p>
+<div class="mt-3 flex gap-2">
+<button class="px-2 py-1 bg-accent-magenta/20 hover:bg-accent-magenta/40 text-[10px] text-white border border-accent-magenta/50 rounded transition-colors uppercase">Review MRI</button>
+</div>
+</div>
+<div class="bg-black/40 border border-primary/30 rounded-lg p-3">
+<h4 class="text-primary text-xs font-bold uppercase mb-2 tracking-wider">Treatment Efficacy</h4>
+<p class="text-xs text-gray-300 leading-relaxed">
+                        Projected response to hormonal therapy shows a <span class="text-success font-bold">85% probability</span> of reducing lesion volume by Month 6.
+                    </p>
+</div>
+<div class="mt-4">
+<h4 class="text-white text-xs font-display uppercase mb-3 border-b border-white/10 pb-1">Recommended Actions</h4>
+<ul class="space-y-2">
+<li class="flex items-start gap-2 text-xs text-gray-400 group cursor-pointer hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm text-accent-cyan group-hover:animate-bounce">arrow_forward</span>
+                            Schedule follow-up ultrasound for week 42.
+                        </li>
+<li class="flex items-start gap-2 text-xs text-gray-400 group cursor-pointer hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm text-accent-cyan group-hover:animate-bounce">arrow_forward</span>
+                            Update biomarker panel: CA-125, IL-6.
+                        </li>
+<li class="flex items-start gap-2 text-xs text-gray-400 group cursor-pointer hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm text-accent-cyan group-hover:animate-bounce">arrow_forward</span>
+                            Validate segmentation mask manually.
+                        </li>
+</ul>
+</div>
+<div class="mt-auto pt-4 border-t border-white/5">
+<div class="flex items-center gap-2 mb-2">
+<span class="w-2 h-2 bg-primary rounded-full animate-ping"></span>
+<span class="text-[10px] uppercase text-primary font-mono">Generating Prognosis...</span>
+</div>
+<div class="text-[10px] font-mono text-gray-500 h-16 overflow-hidden">
+                        &gt; analyzing_histology_vector...<br/>
+                        &gt; cross_referencing_cohort_99...<br/>
+                        &gt; physics_constraint_check: PASS<br/>
+                        &gt; optimizing_treatment_path...
+                    </div>
+</div>
+</div>
+</aside>
+<section class="col-span-12 md:col-span-4 lg:col-span-3 row-span-5 glass-panel rounded-xl flex flex-col">
+<div class="p-3 border-b border-white/5 flex justify-between items-center">
+<h3 class="font-display text-xs tracking-widest text-white uppercase">Biomarker Sensitivity</h3>
+<span class="material-symbols-outlined text-gray-500 text-xs">bar_chart</span>
+</div>
+<div class="flex-1 p-4 flex flex-col justify-center space-y-4">
+<div>
+<div class="flex justify-between text-[10px] uppercase text-gray-400 mb-1">
+<span>CA-125</span>
+<span class="text-accent-cyan">High Impact</span>
+</div>
+<div class="w-full bg-white/5 rounded-full h-2 overflow-hidden">
+<div class="bg-accent-cyan h-full w-[85%] shadow-neon-cyan"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[10px] uppercase text-gray-400 mb-1">
+<span>IL-6 Cytokine</span>
+<span class="text-accent-magenta">Critical</span>
+</div>
+<div class="w-full bg-white/5 rounded-full h-2 overflow-hidden">
+<div class="bg-accent-magenta h-full w-[92%] shadow-neon-magenta"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[10px] uppercase text-gray-400 mb-1">
+<span>TNF-Alpha</span>
+<span class="text-primary">Moderate</span>
+</div>
+<div class="w-full bg-white/5 rounded-full h-2 overflow-hidden">
+<div class="bg-primary h-full w-[60%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[10px] uppercase text-gray-400 mb-1">
+<span>VEGF-A</span>
+<span class="text-gray-500">Low</span>
+</div>
+<div class="w-full bg-white/5 rounded-full h-2 overflow-hidden">
+<div class="bg-gray-600 h-full w-[35%]"></div>
+</div>
+</div>
+</div>
+</section>
+<section class="col-span-12 md:col-span-4 lg:col-span-3 row-span-5 glass-panel rounded-xl flex flex-col overflow-hidden">
+<div class="p-3 border-b border-white/5 flex justify-between items-center">
+<h3 class="font-display text-xs tracking-widest text-white uppercase">Population Benchmarking</h3>
+<span class="material-symbols-outlined text-gray-500 text-xs">scatter_plot</span>
+</div>
+<div class="flex-1 relative bg-black/30">
+<div class="absolute inset-0 grid grid-cols-4 grid-rows-4">
+<div class="border-r border-b border-white/5"></div>
+<div class="border-r border-b border-white/5"></div>
+<div class="border-r border-b border-white/5"></div>
+<div class="border-b border-white/5"></div>
+<div class="border-r border-b border-white/5"></div>
+<div class="border-r border-b border-white/5"></div>
+<div class="border-r border-b border-white/5"></div>
+<div class="border-b border-white/5"></div>
+<div class="border-r border-b border-white/5"></div>
+<div class="border-r border-b border-white/5"></div>
+<div class="border-r border-b border-white/5"></div>
+<div class="border-b border-white/5"></div>
+</div>
+<div class="absolute bottom-1 left-0 w-full text-center text-[9px] text-gray-500 uppercase">Age vs. Severity</div>
+<div class="absolute top-0 left-1 h-full flex items-center text-[9px] text-gray-500 uppercase w-4" style="writing-mode: vertical-rl; transform: rotate(180deg);">Symptom Index</div>
+<div class="absolute top-[30%] left-[40%] w-1.5 h-1.5 bg-gray-600 rounded-full opacity-50"></div>
+<div class="absolute top-[50%] left-[20%] w-1.5 h-1.5 bg-gray-600 rounded-full opacity-50"></div>
+<div class="absolute top-[20%] left-[60%] w-1.5 h-1.5 bg-gray-600 rounded-full opacity-50"></div>
+<div class="absolute top-[60%] left-[70%] w-1.5 h-1.5 bg-gray-600 rounded-full opacity-50"></div>
+<div class="absolute top-[45%] left-[55%] w-1.5 h-1.5 bg-gray-600 rounded-full opacity-50"></div>
+<div class="absolute top-[25%] left-[65%] w-3 h-3 bg-accent-cyan rounded-full shadow-[0_0_10px_#00f0ff] animate-pulse z-10 border border-white"></div>
+<div class="absolute top-[25%] left-[65%] -ml-8 -mt-6 bg-black/80 px-1 rounded text-[9px] text-accent-cyan border border-accent-cyan/30">You</div>
+<div class="absolute top-[20%] left-[60%] w-16 h-16 bg-primary/20 rounded-full blur-md"></div>
+</div>
+<div class="p-2 text-[10px] text-gray-400 text-center border-t border-white/5">
+                98th Percentile for Severity
+            </div>
+</section>
+<section class="col-span-12 md:col-span-4 lg:col-span-3 row-span-5 glass-panel rounded-xl flex flex-col">
+<div class="p-3 border-b border-white/5 flex justify-between items-center">
+<h3 class="font-display text-xs tracking-widest text-white uppercase">Physics Error Dist.</h3>
+<span class="material-symbols-outlined text-gray-500 text-xs">equalizer</span>
+</div>
+<div class="flex-1 p-4 flex items-end justify-between gap-1">
+<div class="w-full bg-primary/20 h-[10%] rounded-t-sm hover:bg-accent-cyan transition-colors"></div>
+<div class="w-full bg-primary/30 h-[20%] rounded-t-sm hover:bg-accent-cyan transition-colors"></div>
+<div class="w-full bg-primary/40 h-[45%] rounded-t-sm hover:bg-accent-cyan transition-colors"></div>
+<div class="w-full bg-primary/60 h-[80%] rounded-t-sm relative group hover:bg-accent-cyan transition-colors">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] bg-black text-white px-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">Mean</div>
+</div>
+<div class="w-full bg-primary/40 h-[50%] rounded-t-sm hover:bg-accent-cyan transition-colors"></div>
+<div class="w-full bg-primary/30 h-[25%] rounded-t-sm hover:bg-accent-cyan transition-colors"></div>
+<div class="w-full bg-accent-magenta/60 h-[15%] rounded-t-sm hover:bg-accent-magenta transition-colors relative">
+<div class="absolute -top-1 right-0 w-1 h-1 bg-white rounded-full animate-ping"></div>
+</div>
+</div>
+<div class="p-2 border-t border-white/5 flex justify-between text-[10px] font-mono text-gray-400">
+<span>0.001</span>
+<span>RESIDUAL</span>
+<span>0.050</span>
+</div>
+</section>
+</main>
+
+</body></html>

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PINN Training &amp; Optimization Deck</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7311d4",
+                        "primary-dark": "#4a0b8a",
+                        "background-light": "#f7f6f8",
+                        "background-dark": "#0f0f13", 
+                        "panel-bg": "rgba(26, 17, 34, 0.75)", 
+                        "accent-cyan": "#00f0ff",
+                        "accent-magenta": "#ff0055",
+                        "success": "#0bda73",
+                        "warning": "#f59e0b",
+                    },
+                    fontFamily: {
+                        "display": ["Orbitron", "sans-serif"],
+                        "body": ["Space Grotesk", "sans-serif"],
+                        "mono": ["Space Mono", "monospace"],
+                    },
+                    boxShadow: {
+                        'neon-cyan': '0 0 5px #00f0ff, 0 0 10px #00f0ff',
+                        'neon-magenta': '0 0 5px #ff0055, 0 0 10px #ff0055',
+                        'neon-primary': '0 0 5px #7311d4, 0 0 20px rgba(115, 17, 212, 0.5)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0f0f13;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(115, 17, 212, 0.15) 0%, transparent 50%),
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+        }
+        .logs-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .logs-scroll::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.3);
+        }
+        .logs-scroll::-webkit-scrollbar-thumb {
+            background: #4d3267;
+            border-radius: 3px;
+        }
+        .glass-panel {
+            background: rgba(20, 15, 28, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(115, 17, 212, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+        .hologram-grid {
+            background-image: 
+                linear-gradient(rgba(0, 240, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            perspective: 1000px;
+        }.neuron-pulse {
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.6; transform: scale(1); box-shadow: 0 0 5px currentColor; }
+            50% { opacity: 1; transform: scale(1.2); box-shadow: 0 0 15px currentColor; }
+        }
+        .synapse-flow {
+            stroke-dasharray: 10;
+            animation: dash 1s linear infinite;
+        }
+        @keyframes dash {
+            to { stroke-dashoffset: -20; }
+        }
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 10px #fff;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="text-white font-body h-screen flex flex-col overflow-hidden">
+<header class="flex-none flex items-center justify-between border-b border-[#362348] bg-[#1a1122]/90 backdrop-blur-md px-6 py-3 z-50">
+<div class="flex items-center gap-4 text-white">
+<div class="size-8 text-accent-cyan animate-pulse">
+<span class="material-symbols-outlined text-3xl">biotech</span>
+</div>
+<div class="flex flex-col">
+<h2 class="text-white text-lg font-display tracking-wider font-bold leading-tight">ENDOTWIN <span class="text-primary font-light">CONSOLE v2.1</span></h2>
+<span class="text-[10px] text-gray-400 tracking-[0.2em] uppercase">PINN Optimization Deck</span>
+</div>
+</div>
+<div class="flex flex-1 justify-center gap-8 px-8">
+<nav class="hidden md:flex items-center gap-1 bg-black/20 p-1 rounded-full border border-white/5">
+<a class="px-5 py-1.5 rounded-full text-gray-400 text-sm font-medium hover:text-white hover:bg-white/5 transition-all" href="#">Simulation</a>
+<a class="px-5 py-1.5 rounded-full text-sm font-medium transition-all bg-primary/20 text-white shadow-neon-primary border border-primary/50" href="#">Training</a>
+<a class="px-5 py-1.5 rounded-full text-gray-400 text-sm font-medium hover:text-white hover:bg-white/5 transition-all" href="#">Compliance</a>
+<a class="px-5 py-1.5 rounded-full text-gray-400 text-sm font-medium hover:text-white hover:bg-white/5 transition-all" href="#">Security</a>
+</nav>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-md border border-success/30 bg-success/10">
+<div class="w-2 h-2 rounded-full bg-success animate-pulse"></div>
+<span class="text-xs font-mono text-success uppercase tracking-wider">GPU Cluster: ONLINE</span>
+</div>
+<button class="flex items-center justify-center size-9 rounded-lg hover:bg-[#362348] text-gray-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+<div class="h-6 w-px bg-[#362348] mx-1"></div>
+<button class="flex items-center gap-2 pl-2">
+<div class="size-8 rounded-full bg-gradient-to-tr from-primary to-accent-cyan p-[1px]">
+<div class="w-full h-full rounded-full bg-[#1a1122] flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">person</span>
+</div>
+</div>
+</button>
+</div>
+</header>
+<main class="flex-1 p-4 grid grid-cols-12 grid-rows-12 gap-4 h-full overflow-hidden">
+<section class="col-span-12 row-span-4 glass-panel rounded-xl flex flex-col p-4 relative overflow-hidden">
+<div class="flex justify-between items-start mb-2 z-10">
+<div>
+<h3 class="font-display text-sm tracking-widest text-accent-cyan uppercase flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">timeline</span>
+                        Training Evolution
+                    </h3>
+<div class="text-[10px] text-gray-400 font-mono mt-1">Epoch: 4,920 / 10,000 | Time Remaining: 02:14:33</div>
+</div>
+<div class="flex gap-6">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-sm bg-accent-magenta"></div>
+<div class="flex flex-col">
+<span class="text-[10px] text-gray-400 uppercase leading-none">Total Loss</span>
+<span class="text-xs font-mono text-white leading-none">1.2e-4</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-sm bg-accent-cyan"></div>
+<div class="flex flex-col">
+<span class="text-[10px] text-gray-400 uppercase leading-none">Physics Loss</span>
+<span class="text-xs font-mono text-white leading-none">8.5e-6</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-sm bg-white"></div>
+<div class="flex flex-col">
+<span class="text-[10px] text-gray-400 uppercase leading-none">Val Acc</span>
+<span class="text-xs font-mono text-white leading-none">98.2%</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex-1 w-full relative">
+<div class="absolute inset-0 border-l border-b border-white/10" style="background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 40px 40px;">
+</div>
+<svg class="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none">
+<path class="opacity-80 drop-shadow-[0_0_8px_rgba(0,240,255,0.6)]" d="M0,150 C100,140 200,100 400,90 S600,60 800,50 S1000,45 1200,40" fill="none" stroke="#00f0ff" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+<path class="opacity-80 drop-shadow-[0_0_8px_rgba(255,0,85,0.6)]" d="M0,100 C150,90 300,50 500,40 S800,30 1200,20" fill="none" stroke="#ff0055" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+<path class="opacity-50" d="M0,180 C200,160 400,120 600,80 S900,40 1200,30" fill="none" stroke="white" stroke-dasharray="4,4" stroke-width="1.5" vector-effect="non-scaling-stroke"></path>
+</svg>
+<div class="absolute top-0 bottom-0 left-[65%] w-px bg-white/40 border-r border-dashed border-white/40">
+<div class="absolute top-[60px] -left-1 w-2 h-2 rounded-full bg-accent-cyan shadow-[0_0_10px_#00f0ff]"></div>
+<div class="absolute top-[35px] -left-1 w-2 h-2 rounded-full bg-accent-magenta shadow-[0_0_10px_#ff0055]"></div>
+</div>
+</div>
+</section>
+<aside class="col-span-12 md:col-span-3 row-span-5 glass-panel rounded-xl flex flex-col p-5 overflow-y-auto">
+<h3 class="font-display text-sm tracking-widest text-primary uppercase flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-sm">tune</span>
+                Hyperparameters
+            </h3>
+<div class="space-y-6">
+<div class="group">
+<div class="flex justify-between text-xs font-mono mb-2 text-gray-300">
+<span>Learning Rate</span>
+<span class="text-accent-cyan">1e-4</span>
+</div>
+<input class="accent-accent-cyan" max="100" min="1" type="range" value="40"/>
+<div class="w-full h-1 bg-white/10 mt-[-10px] rounded-full relative -z-10 overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-accent-cyan w-[40%]"></div>
+</div>
+</div>
+<div class="group">
+<div class="flex justify-between text-xs font-mono mb-2 text-gray-300">
+<span>Physics Weight (λ)</span>
+<span class="text-accent-magenta">0.85</span>
+</div>
+<input class="accent-accent-magenta" max="100" min="0" type="range" value="85"/>
+<div class="w-full h-1 bg-white/10 mt-[-10px] rounded-full relative -z-10 overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-accent-magenta w-[85%]"></div>
+</div>
+</div>
+<div class="group">
+<div class="flex justify-between text-xs font-mono mb-2 text-gray-300">
+<span>Batch Size</span>
+<span class="text-white">64</span>
+</div>
+<div class="flex gap-2 mt-1">
+<button class="flex-1 py-1 border border-white/20 rounded hover:bg-white/10 text-xs font-mono transition-colors">32</button>
+<button class="flex-1 py-1 border border-primary text-primary bg-primary/20 rounded text-xs font-mono shadow-neon-primary">64</button>
+<button class="flex-1 py-1 border border-white/20 rounded hover:bg-white/10 text-xs font-mono transition-colors">128</button>
+</div>
+</div>
+<div class="space-y-3 pt-4 border-t border-white/10">
+<div class="flex items-center justify-between">
+<span class="text-xs text-gray-400">Adaptive Activation</span>
+<div class="w-8 h-4 bg-primary/50 rounded-full relative cursor-pointer">
+<div class="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full shadow-sm"></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-xs text-gray-400">Gradient Clipping</span>
+<div class="w-8 h-4 bg-white/10 rounded-full relative cursor-pointer">
+<div class="absolute left-0.5 top-0.5 w-3 h-3 bg-gray-400 rounded-full shadow-sm"></div>
+</div>
+</div>
+</div>
+</div>
+<button class="mt-auto w-full py-3 bg-primary/20 hover:bg-primary/40 border border-primary text-white font-display uppercase text-xs tracking-wider transition-all rounded shadow-neon-primary">
+                Apply Parameters
+            </button>
+</aside>
+<section class="col-span-12 md:col-span-6 row-span-5 relative rounded-xl border border-primary/30 overflow-hidden bg-black flex flex-col shadow-neon-primary">
+<div class="absolute top-4 left-4 z-10">
+<div class="bg-black/60 backdrop-blur text-xs font-display text-white px-3 py-1.5 rounded border border-white/10 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-accent-cyan animate-pulse"></span>
+                    PINN ARCHITECTURE VISUALIZATION
+                </div>
+</div>
+<div class="flex-1 relative flex items-center justify-center hologram-grid overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-primary/5"></div>
+<svg class="w-full h-full max-w-lg mx-auto overflow-visible" viewBox="0 0 400 300">
+<defs>
+<linearGradient id="synapseGradient" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" style="stop-color:#00f0ff;stop-opacity:0.6"></stop>
+<stop offset="100%" style="stop-color:#ff0055;stop-opacity:0.6"></stop>
+</linearGradient>
+<filter id="glow">
+<feGaussianBlur result="coloredBlur" stdDeviation="2.5"></feGaussianBlur>
+<feMerge>
+<feMergeNode in="coloredBlur"></feMergeNode>
+<feMergeNode in="SourceGraphic"></feMergeNode>
+</feMerge>
+</filter>
+</defs>
+<g transform="translate(50, 150)">
+<circle class="neuron-pulse" cx="0" cy="-60" fill="#00f0ff" filter="url(#glow)" r="6"></circle>
+<circle class="neuron-pulse" cx="0" cy="0" fill="#00f0ff" filter="url(#glow)" r="6" style="animation-delay: 0.2s"></circle>
+<circle class="neuron-pulse" cx="0" cy="60" fill="#00f0ff" filter="url(#glow)" r="6" style="animation-delay: 0.4s"></circle>
+<text fill="#00f0ff" font-family="monospace" font-size="10" opacity="0.7" text-anchor="end" x="-30" y="5">INPUT</text>
+</g>
+<g opacity="0.4" stroke="url(#synapseGradient)" stroke-width="1">
+<line class="synapse-flow" x1="50" x2="150" y1="-60" y2="-80"></line>
+<line class="synapse-flow" x1="50" x2="150" y1="-60" y2="-30"></line>
+<line class="synapse-flow" x1="50" x2="150" y1="0" y2="-30"></line>
+<line class="synapse-flow" x1="50" x2="150" y1="0" y2="30"></line>
+<line class="synapse-flow" x1="50" x2="150" y1="60" y2="30"></line>
+<line class="synapse-flow" x1="50" x2="150" y1="60" y2="80"></line>
+</g>
+<g transform="translate(150, 150)">
+<circle cx="0" cy="-80" fill="white" opacity="0.8" r="4"></circle>
+<circle cx="0" cy="-30" fill="white" opacity="0.8" r="4"></circle>
+<circle cx="0" cy="30" fill="white" opacity="0.8" r="4"></circle>
+<circle cx="0" cy="80" fill="white" opacity="0.8" r="4"></circle>
+</g>
+<g opacity="0.4" stroke="url(#synapseGradient)" stroke-width="1">
+<line class="synapse-flow" x1="150" x2="250" y1="-80" y2="-60"></line>
+<line class="synapse-flow" x1="150" x2="250" y1="-30" y2="-60"></line>
+<line class="synapse-flow" x1="150" x2="250" y1="-30" y2="0"></line>
+<line class="synapse-flow" x1="150" x2="250" y1="30" y2="0"></line>
+<line class="synapse-flow" x1="150" x2="250" y1="80" y2="60"></line>
+</g>
+<g transform="translate(250, 150)">
+<circle cx="0" cy="-60" fill="white" opacity="0.8" r="4"></circle>
+<circle cx="0" cy="0" fill="white" opacity="0.8" r="4"></circle>
+<circle cx="0" cy="60" fill="white" opacity="0.8" r="4"></circle>
+</g>
+<g opacity="0.6" stroke="#ff0055" stroke-width="1">
+<line class="synapse-flow" x1="250" x2="350" y1="-60" y2="0"></line>
+<line class="synapse-flow" x1="250" x2="350" y1="0" y2="0"></line>
+<line class="synapse-flow" x1="250" x2="350" y1="60" y2="0"></line>
+</g>
+<g transform="translate(350, 150)">
+<circle class="neuron-pulse" cx="0" cy="0" fill="#ff0055" filter="url(#glow)" r="8"></circle>
+<text fill="#ff0055" font-family="monospace" font-size="10" opacity="0.7" x="20" y="5">PREDICTION</text>
+</g>
+</svg>
+<div class="absolute bottom-4 left-0 right-0 flex justify-center gap-8 text-[10px] font-mono text-gray-500 uppercase tracking-widest">
+<span>Forward Pass</span>
+<span class="text-primary">Backpropagation Active</span>
+</div>
+</div>
+</section>
+<aside class="col-span-12 md:col-span-3 row-span-5 glass-panel rounded-xl flex flex-col p-5">
+<h3 class="font-display text-sm tracking-widest text-warning uppercase flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-sm">hub</span>
+                Federated Weights
+            </h3>
+<div class="flex-1 flex flex-col justify-around">
+<div class="flex items-center gap-4">
+<div class="relative w-12 h-12 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90">
+<circle cx="24" cy="24" fill="none" r="20" stroke="rgba(255,255,255,0.1)" stroke-width="4"></circle>
+<circle class="drop-shadow-[0_0_5px_#00f0ff]" cx="24" cy="24" fill="none" r="20" stroke="#00f0ff" stroke-dasharray="126" stroke-dashoffset="30" stroke-width="4"></circle>
+</svg>
+<span class="absolute text-[10px] font-bold">75%</span>
+</div>
+<div class="flex flex-col">
+<span class="text-xs font-bold text-accent-cyan">Imaging Node</span>
+<span class="text-[10px] text-gray-400">Contribution Weight</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative w-12 h-12 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90">
+<circle cx="24" cy="24" fill="none" r="20" stroke="rgba(255,255,255,0.1)" stroke-width="4"></circle>
+<circle class="drop-shadow-[0_0_5px_#ff0055]" cx="24" cy="24" fill="none" r="20" stroke="#ff0055" stroke-dasharray="126" stroke-dashoffset="60" stroke-width="4"></circle>
+</svg>
+<span class="absolute text-[10px] font-bold">52%</span>
+</div>
+<div class="flex flex-col">
+<span class="text-xs font-bold text-accent-magenta">Clinical Node</span>
+<span class="text-[10px] text-gray-400">Contribution Weight</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative w-12 h-12 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90">
+<circle cx="24" cy="24" fill="none" r="20" stroke="rgba(255,255,255,0.1)" stroke-width="4"></circle>
+<circle class="drop-shadow-[0_0_5px_#0bda73]" cx="24" cy="24" fill="none" r="20" stroke="#0bda73" stroke-dasharray="126" stroke-dashoffset="10" stroke-width="4"></circle>
+</svg>
+<span class="absolute text-[10px] font-bold">92%</span>
+</div>
+<div class="flex flex-col">
+<span class="text-xs font-bold text-success">Pathology Node</span>
+<span class="text-[10px] text-gray-400">Contribution Weight</span>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-4 border-t border-white/10">
+<div class="text-[10px] text-gray-500 font-mono mb-2 uppercase">Aggregation Strategy</div>
+<div class="flex gap-2">
+<span class="px-2 py-1 bg-white/10 rounded text-[10px] border border-white/20 text-white">FedAvg</span>
+<span class="px-2 py-1 bg-transparent rounded text-[10px] border border-white/10 text-gray-500">FedProx</span>
+</div>
+</div>
+</aside>
+<footer class="col-span-12 row-span-3 glass-panel rounded-xl flex flex-col overflow-hidden border-t-2 border-primary/50">
+<div class="flex-none px-4 py-2 bg-black/40 border-b border-white/5 flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-sm text-primary">terminal</span>
+<span class="font-display text-xs tracking-widest text-white uppercase">Quantum Console Logs</span>
+</div>
+<div class="flex gap-4 text-[10px] font-mono text-gray-400">
+<span>Mem Usage: 14.2GB / 24GB</span>
+<span class="text-success">GPU Temp: 64°C</span>
+</div>
+</div>
+<div class="flex-1 flex bg-[#0a0a0c] font-mono text-xs p-0">
+<div class="flex-1 p-3 overflow-y-auto logs-scroll space-y-1.5 text-gray-300 font-mono leading-relaxed">
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded">
+<span class="text-gray-600 w-20">[14:02:22]</span>
+<span class="text-primary w-16 font-bold">INFO</span>
+<span class="text-gray-300">Initializing PINN model architecture with 4 hidden layers...</span>
+</div>
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded">
+<span class="text-gray-600 w-20">[14:02:23]</span>
+<span class="text-primary w-16 font-bold">INFO</span>
+<span class="text-gray-300">Distributing weights across Federated Nodes (Secure Aggregation Protocol)</span>
+</div>
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded">
+<span class="text-gray-600 w-20">[14:02:25]</span>
+<span class="text-success w-16 font-bold">SUCCESS</span>
+<span class="text-gray-300">Physics boundary conditions verified: Dirichlet &amp; Neumann OK.</span>
+</div>
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded">
+<span class="text-gray-600 w-20">[14:02:30]</span>
+<span class="text-accent-cyan w-16 font-bold">TRAIN</span>
+<span class="text-gray-300">Epoch 1/10000 completed. MSE Loss: 0.45, Physics Loss: 0.12</span>
+</div>
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded">
+<span class="text-gray-600 w-20">[14:02:35]</span>
+<span class="text-accent-cyan w-16 font-bold">TRAIN</span>
+<span class="text-gray-300">Epoch 50/10000 completed. MSE Loss: 0.32, Physics Loss: 0.09</span>
+</div>
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded">
+<span class="text-gray-600 w-20">[14:02:40]</span>
+<span class="text-warning w-16 font-bold">WARN</span>
+<span class="text-gray-300">Gradient spike detected in hidden_layer_2. Autoscaling Learning Rate...</span>
+</div>
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded">
+<span class="text-gray-600 w-20">[14:02:45]</span>
+<span class="text-accent-cyan w-16 font-bold">TRAIN</span>
+<span class="text-gray-300">Epoch 120/10000 completed. Loss stabilized at 0.15</span>
+</div>
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded opacity-50">
+<span class="text-gray-600 w-20">[14:02:50]</span>
+<span class="text-accent-cyan w-16 font-bold">TRAIN</span>
+<span class="text-gray-300">Optimizing colocation points...</span>
+</div>
+</div>
+</div>
+<div class="p-2 border-t border-white/10 bg-black/60 flex items-center gap-2">
+<span class="text-accent-cyan animate-pulse font-bold pl-2">&gt;</span>
+<input class="bg-transparent border-none text-white w-full focus:ring-0 p-1 text-sm placeholder-gray-600 font-mono" placeholder="Enter physics constraint command or --help..." type="text"/>
+</div>
+</footer>
+</main>
+
+</body></html>

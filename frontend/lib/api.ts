@@ -63,16 +63,6 @@ export async function trainFederatedNodes(epochs: number = 10): Promise<any> {
     return response.json();
 }
 
-export async function getTrainingHistory(): Promise<TrainingHistoryItem[]> {
-    const response = await fetch(`${API_BASE_URL}/training/history`);
-
-    if (!response.ok) {
-        throw new Error('Failed to fetch training history');
-    }
-
-    const data = await response.json();
-    return data.history || [];
-}
 
 export async function getNodeStatus(): Promise<FederatedNodesStatus> {
     const response = await fetch(`${API_BASE_URL}/status/nodes`);
@@ -104,6 +94,160 @@ export async function getStats(): Promise<StatsResponse> {
 
     if (!response.ok) {
         throw new Error('Failed to fetch stats');
+    }
+
+    return response.json();
+}
+
+// ==================== Patient Management ====================
+
+import type { Patient, CreatePatientRequest, PatientsListResponse } from '@/types/patient';
+
+export async function createPatient(data: CreatePatientRequest): Promise<Patient> {
+    const response = await fetch(`${API_BASE_URL}/patients`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to create patient');
+    }
+
+    return response.json();
+}
+
+export async function getPatients(): Promise<PatientsListResponse> {
+    const response = await fetch(`${API_BASE_URL}/patients`);
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch patients');
+    }
+
+    return response.json();
+}
+
+export async function getPatient(id: string): Promise<Patient> {
+    const response = await fetch(`${API_BASE_URL}/patients/${id}`);
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch patient');
+    }
+
+    return response.json();
+}
+
+export async function updatePatient(id: string, data: Partial<Patient>): Promise<Patient> {
+    const response = await fetch(`${API_BASE_URL}/patients/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to update patient');
+    }
+
+    return response.json();
+}
+
+export async function deletePatient(id: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/patients/${id}`, {
+        method: 'DELETE',
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to delete patient');
+    }
+}
+
+// ==================== Settings Management ====================
+
+export type { Settings, UpdateSettingsRequest } from '@/types/settings';
+
+export async function getSettings(): Promise<Settings> {
+    const response = await fetch(`${API_BASE_URL}/config`);
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch settings');
+    }
+
+    return response.json();
+}
+
+export async function updateSettings(data: UpdateSettingsRequest): Promise<Settings> {
+    const response = await fetch(`${API_BASE_URL}/config`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to update settings');
+    }
+
+    return response.json();
+}
+
+export async function getDefaultSettings(): Promise<Settings> {
+    const response = await fetch(`${API_BASE_URL}/config/defaults`);
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch default settings');
+    }
+
+    return response.json();
+}
+
+// ==================== Analytics & Training History ====================
+
+export interface TrainingRun {
+    run_id: number;
+    timestamp: string;
+    epochs: Array<{
+        epoch: number;
+        loss: number;
+        data_loss?: number;
+        physics_loss?: number;
+        timestamp: string;
+    }>;
+    final_loss: number;
+}
+
+export interface ModelMetrics {
+    accuracy: number | null;
+    precision: number | null;
+    recall: number | null;
+    f1_score: number | null;
+}
+
+export interface AnalyticsMetrics {
+    model_metrics: ModelMetrics;
+    latest_run: TrainingRun | null;
+    node_performance: {
+        imaging: { contribution: number; accuracy: number };
+        clinical: { contribution: number; accuracy: number };
+        pathology: { contribution: number; accuracy: number };
+    };
+    total_predictions: number;
+    total_epochs_trained: number;
+}
+
+export async function getTrainingHistory(): Promise<{ training_runs: TrainingRun[]; count: number }> {
+    const response = await fetch(`${API_BASE_URL}/training/history`);
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch training history');
+    }
+
+    return response.json();
+}
+
+export async function getAnalyticsMetrics(): Promise<AnalyticsMetrics> {
+    const response = await fetch(`${API_BASE_URL}/analytics/metrics`);
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch analytics metrics');
     }
 
     return response.json();
