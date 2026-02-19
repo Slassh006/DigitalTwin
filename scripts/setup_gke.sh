@@ -3,7 +3,7 @@ set -e
 
 # Configuration
 PROJECT_ID="gen-lang-client-0526065945"
-REGION="asia-south1"
+REGION="us-central1"
 CLUSTER_NAME="endotwin-cluster"
 REPO_NAME="digital-twin-repo"
 

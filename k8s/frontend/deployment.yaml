@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: asia-south1-docker.pkg.dev/gen-lang-client-0526065945/digital-twin-repo/frontend:latest
+        image: us-central1-docker.pkg.dev/gen-lang-client-0526065945/digital-twin-repo/frontend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3000

@@ -3,7 +3,7 @@ set -e
 
 # Configuration
 PROJECT_ID="gen-lang-client-0526065945"
-REGION="asia-south1"
+REGION="us-central1"
 REPO_NAME="digital-twin-repo"
 IMAGE_ROOT="$REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME"
 

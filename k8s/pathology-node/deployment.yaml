@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - name: pathology-node
-        image: asia-south1-docker.pkg.dev/gen-lang-client-0526065945/digital-twin-repo/pathology-node:latest
+        image: us-central1-docker.pkg.dev/gen-lang-client-0526065945/digital-twin-repo/pathology-node:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
