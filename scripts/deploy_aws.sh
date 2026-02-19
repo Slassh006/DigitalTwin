@@ -6,6 +6,16 @@ echo "=========================================="
 echo "      DEPLOYING TO AWS (MICROK8S)         "
 echo "=========================================="
 
+# Pre-flight check: Is Registry running?
+echo "Checking registry status..."
+if ! curl --max-time 2 -s http://localhost:32000/v2/ &> /dev/null; then
+    echo "❌ ERROR: Local registry (localhost:32000) is NOT reachable."
+    echo "   The 'registry' addon is probably not enabled."
+    echo "   👉 Please run: ./scripts/setup_aws.sh"
+    exit 1
+fi
+echo "✅ Registry is online."
+
 build_and_push() {
     SERVICE=$1
     CONTEXT=$2
