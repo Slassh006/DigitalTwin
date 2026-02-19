@@ -56,17 +56,17 @@ docker-compose up --build
 
 ### 2. Cloud Deployment (GKE) ☁️
 
-This project is optimized for deployment on **Google Kubernetes Engine (GKE)**.
+This project uses **Google Cloud Build** to bypass local network restrictions and deploy reliably.
 
 #### **Step 1: Setup Infrastructure**
-Run the setup script to enable APIs, create the Artifact Registry, and provision the GKE cluster:
+Run the setup script to enable APIs (including Cloud Build) and create the GKE cluster:
 ```bash
 chmod +x scripts/setup_gke.sh
 ./scripts/setup_gke.sh
 ```
 
 #### **Step 2: Deploy Application**
-Run the deploy script to build images, push them to GCR, and apply Kubernetes manifests:
+Run the deploy script to submit builds to Cloud Build and apply Kubernetes manifests:
 ```bash
 chmod +x scripts/deploy.sh
 ./scripts/deploy.sh
@@ -75,7 +75,7 @@ chmod +x scripts/deploy.sh
 #### **Step 3: Access Application**
 Get the external IP address of the frontend service:
 ```bash
-kubectl get services -n frontend
+./scripts/check_status.sh
 ```
 
 ---
