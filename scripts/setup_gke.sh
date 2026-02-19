@@ -8,14 +8,15 @@ CLUSTER_NAME="endotwin-cluster"
 REPO_NAME="digital-twin-repo"
 
 echo "=========================================="
-echo "      GKE SETUP FOR DIGITAL TWIN          "
+echo "      GKE SETUP (CLOUD BUILD)             "
 echo "=========================================="
 
 echo "[1/4] Setting local gcloud project to $PROJECT_ID..."
 gcloud config set project $PROJECT_ID
 
 echo "[2/4] Enabling required Google Cloud APIs..."
-gcloud services enable container.googleapis.com artifactregistry.googleapis.com
+# Added cloudbuild.googleapis.com
+gcloud services enable container.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com
 echo "APIs enabled."
 
 echo "[3/4] Checking/Creating Artifact Registry Repository..."
@@ -31,11 +32,10 @@ else
 fi
 
 echo "[4/4] Checking/Creating GKE Autopilot Cluster..."
-# Autopilot is recommended for hands-off management
 if gcloud container clusters describe $CLUSTER_NAME --region=$REGION &> /dev/null; then
     echo "Cluster $CLUSTER_NAME already exists."
 else
-    echo "Creating Autopilot cluster $CLUSTER_NAME (this may take 10-15 minutes)..."
+    echo "Creating Autopilot cluster $CLUSTER_NAME..."
     gcloud container clusters create-auto $CLUSTER_NAME \
         --region=$REGION \
         --release-channel=regular
