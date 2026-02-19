@@ -59,6 +59,14 @@ echo "=========================================="
 
 # Applying all manifests
 echo "Applying manifests from ./k8s directory..."
+
+# Apply namespaces first to ensure they exist
+echo "Creating namespaces..."
+kubectl apply -f k8s/namespaces.yaml
+kubectl apply -f k8s/frontend/namespace.yaml
+
+# Apply the rest of the manifests
+echo "Applying services and deployments..."
 kubectl apply -R -f ./k8s
 
 echo "=========================================="
