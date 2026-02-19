@@ -11,9 +11,10 @@ import hologramFragmentShader from "./shaders/hologram.frag.glsl";
 interface BackendMeshProps {
     stiffness: number;
     meshUrl?: string;
+    heatmapEnabled?: boolean;
 }
 
-function createHologramMaterial() {
+function createHologramMaterial(stiffness: number, heatmapEnabled: boolean) {
     return new THREE.ShaderMaterial({
         vertexShader: hologramVertexShader,
         fragmentShader: hologramFragmentShader,
@@ -22,6 +23,8 @@ function createHologramMaterial() {
             uColor: { value: new THREE.Color("#00ffff") },
             uColor2: { value: new THREE.Color("#ff00ff") },
             uOpacity: { value: 0.7 },
+            uStiffness: { value: stiffness },
+            uHeatmapEnabled: { value: heatmapEnabled ? 1.0 : 0.0 },
         },
         transparent: true,
         side: THREE.DoubleSide,
@@ -30,13 +33,16 @@ function createHologramMaterial() {
     });
 }
 
-function LoadedMesh({ meshUrl }: { meshUrl: string }) {
+function LoadedMesh({ meshUrl, stiffness, heatmapEnabled = true }: { meshUrl: string; stiffness: number; heatmapEnabled?: boolean }) {
     const groupRef = useRef<THREE.Group>(null);
     const { scene } = useGLTF(meshUrl);
 
-    const hologramMaterial = useMemo(() => createHologramMaterial(), []);
+    const hologramMaterial = useMemo(
+        () => createHologramMaterial(stiffness, heatmapEnabled),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        []
+    );
 
-    // Apply hologram shader to all meshes in the loaded GLB
     useEffect(() => {
         if (scene) {
             scene.traverse((child) => {
@@ -47,7 +53,11 @@ function LoadedMesh({ meshUrl }: { meshUrl: string }) {
         }
     }, [scene, hologramMaterial]);
 
-    // Animate: update uTime uniform + slow rotation
+    useEffect(() => {
+        hologramMaterial.uniforms.uStiffness.value = stiffness;
+        hologramMaterial.uniforms.uHeatmapEnabled.value = heatmapEnabled ? 1.0 : 0.0;
+    }, [stiffness, heatmapEnabled, hologramMaterial]);
+
     useFrame((state) => {
         const elapsed = state.clock.elapsedTime;
         hologramMaterial.uniforms.uTime.value = elapsed;
@@ -64,10 +74,19 @@ function LoadedMesh({ meshUrl }: { meshUrl: string }) {
     );
 }
 
-function FallbackMesh() {
+function FallbackMesh({ stiffness, heatmapEnabled = true }: { stiffness: number; heatmapEnabled?: boolean }) {
     const meshRef = useRef<THREE.Mesh>(null);
     const geometry = useMemo(() => new THREE.CapsuleGeometry(1.0, 2.0, 32, 64), []);
-    const hologramMaterial = useMemo(() => createHologramMaterial(), []);
+    const hologramMaterial = useMemo(
+        () => createHologramMaterial(stiffness, heatmapEnabled),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        []
+    );
+
+    useEffect(() => {
+        hologramMaterial.uniforms.uStiffness.value = stiffness;
+        hologramMaterial.uniforms.uHeatmapEnabled.value = heatmapEnabled ? 1.0 : 0.0;
+    }, [stiffness, heatmapEnabled, hologramMaterial]);
 
     useFrame((state) => {
         const elapsed = state.clock.elapsedTime;
@@ -83,9 +102,9 @@ function FallbackMesh() {
     );
 }
 
-export function BackendMesh({ stiffness, meshUrl }: BackendMeshProps) {
+export function BackendMesh({ stiffness, meshUrl, heatmapEnabled = true }: BackendMeshProps) {
     if (meshUrl) {
-        return <LoadedMesh meshUrl={meshUrl} />;
+        return <LoadedMesh meshUrl={meshUrl} stiffness={stiffness} heatmapEnabled={heatmapEnabled} />;
     }
-    return <FallbackMesh />;
+    return <FallbackMesh stiffness={stiffness} heatmapEnabled={heatmapEnabled} />;
 }

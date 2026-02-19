@@ -35,33 +35,47 @@ A next-generation **Digital Twin** platform for endometriosis prediction, utiliz
 ### Prerequisites
 *   **Node.js 18+**
 *   **Python 3.9+**
-*   **Docker Desktop** (for full federated simulation)
+*   **Docker Desktop**
+*   **Google Cloud SDK** (for GKE deployment)
 
-### 1. Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/Slassh006/DigitalTwin.git
-cd DigitalTwin
-
-# Frontend Setup
-cd frontend
-npm install
-```
-
-### 2. Running the Application
+### 1. Local Development
 
 **Frontend (Console):**
 ```bash
 cd frontend
+npm install
 npm run dev
 # Access at http://localhost:3000
 ```
 
 **Backend (Simulation):**
-The frontend includes a **Simulation Engine** that generates realistic data if the backend is offline. To run the full backend:
+To run the full backend locally using Docker Compose:
 ```bash
-./setup_infrastructure.sh
+docker-compose up --build
+```
+
+### 2. Cloud Deployment (GKE) ☁️
+
+This project is optimized for deployment on **Google Kubernetes Engine (GKE)**.
+
+#### **Step 1: Setup Infrastructure**
+Run the setup script to enable APIs, create the Artifact Registry, and provision the GKE cluster:
+```bash
+chmod +x scripts/setup_gke.sh
+./scripts/setup_gke.sh
+```
+
+#### **Step 2: Deploy Application**
+Run the deploy script to build images, push them to GCR, and apply Kubernetes manifests:
+```bash
+chmod +x scripts/deploy.sh
+./scripts/deploy.sh
+```
+
+#### **Step 3: Access Application**
+Get the external IP address of the frontend service:
+```bash
+kubectl get services -n frontend
 ```
 
 ---
@@ -77,12 +91,19 @@ H:/Akash/DigitalTwin/
 │   │   ├── training/       # Training Dashboard Panels
 │   │   └── analytics/      # Analytics Charts
 │   ├── lib/                # Utilities & API Clients
+│   ├── Dockerfile          # Frontend Container Config
 │   └── public/
 │       └── models/         # 3D Assets (uterus.glb)
 ├── backend/                # Python Microservices
 │   ├── pinn_server/        # Central Aggregator (FastAPI)
-│   └── clients/            # Federated Nodes
-└── k8s/                    # Kubernetes Deployment Manifests
+│   └── clients/            # Federated Nodes (Imaging, Clinical, Pathology)
+├── k8s/                    # Kubernetes Manifests
+│   ├── frontend/           # Frontend Deployment & Service
+│   ├── pinn-server/        # Central Server Deployment
+│   └── [node]-node/        # Federated Nodes Deployments
+└── scripts/                # Automation Scripts
+    ├── setup_gke.sh        # Infrastructure Setup
+    └── deploy.sh           # Build & Deploy
 ```
 
 ---
@@ -91,11 +112,5 @@ H:/Akash/DigitalTwin/
 
 *   **Frontend:** Next.js 14, React, TypeScript, Tailwind CSS, Framer Motion
 *   **Visualization:** React Three Fiber, Drei, Recharts
-*   **Backend:** Python, FastAPI, PyTorch
-*   **Infrastructure:** Docker, Kubernetes
-
----
-
-## 🧬 Scientific Context
-
-The **Endotwin** platform addresses the critical need for non-invasive endometriosis diagnosis. By combining **Federated Learning** (to unlock siloed medical data) with **Physics-Informed Deep Learning** (to ensure reliability with limited data), we create a robust, privacy-preserving diagnostic tool. The **Digital Twin** visualization bridges the gap between AI output and clinical interpretation, allowing doctors to visualize tissue stiffness and potential lesions intuitively.
+*   **Backend:** Python, FastAPI, PyTorch (PINN)
+*   **Infrastructure:** Docker, Google Kubernetes Engine (GKE), Artifact Registry

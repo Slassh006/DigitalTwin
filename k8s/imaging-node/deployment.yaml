@@ -23,8 +23,8 @@ spec:
     spec:
       containers:
       - name: imaging-node
-        image: imaging-node:latest
-        imagePullPolicy: Never  # For local development
+        image: asia-south1-docker.pkg.dev/gen-lang-client-0526065945/digital-twin-repo/imaging-node:latest
+        imagePullPolicy: Always  # For local development
         ports:
         - containerPort: 8000
           name: http

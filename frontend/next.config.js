@@ -3,6 +3,8 @@ const nextConfig = {
     images: {
         domains: ['localhost'],
     },
+    output: 'standalone',
+
     webpack: (config) => {
         // Fix for Three.js in Next.js
         config.externals = [...(config.externals || []), { canvas: 'canvas' }];
