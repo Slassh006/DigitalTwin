@@ -30,13 +30,13 @@ sudo chown -f -R $USER ~/.kube
 
 # 4. Enable addons
 echo "Enabling addons..."
-microk8s status --wait-ready
-microk8s enable dns storage ingress registry dashboard
+sudo microk8s status --wait-ready
+sudo microk8s enable dns storage ingress registry dashboard
 
 # Check for GPU (NVIDIA)
 if command -v nvidia-smi &> /dev/null; then
     echo "NVIDIA GPU detected. Enabling GPU support..."
-    microk8s enable gpu
+    sudo microk8s enable gpu
 else
     echo "No NVIDIA GPU detected. Skipping GPU support."
 fi
