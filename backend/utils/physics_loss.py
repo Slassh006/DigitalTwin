@@ -105,8 +105,8 @@ class PINNLoss(nn.Module):
         """
         prediction, stiffness = pred_output
         
-        # Data loss (binary cross-entropy for classification)
-        bce = nn.BCELoss()
+        # Data loss (binary cross-entropy with logits — sigmoid applied internally)
+        bce = nn.BCEWithLogitsLoss()
         data_loss = bce(prediction, target_labels.float())
         
         # If we have ground truth stiffness, use MSE
