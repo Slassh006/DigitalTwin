@@ -3,150 +3,199 @@
 import { useEffect, useState, useMemo } from "react"
 import { motion } from "framer-motion"
 
+// ─── EndoPINN architecture ────────────────────────────────────────────────────
+// Multimodal input (3 modalities) → 4 × 64 hidden (Tanh) → 2 outputs
+// Visual node counts: input=3, hidden×4=6 each, output=2
+// Real dims displayed as labels.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const MODALITY_COLORS = ["#00f0ff", "#ff0055", "#0bda73"] // imaging, clinical, pathology
+const OUTPUT_COLORS = ["#ffd166", "#ff0055"]             // risk prob, stiffness
+
+const NETWORK: number[] = [3, 6, 6, 6, 6, 2]
+const LAYER_META = [
+    { name: "INPUT", sub: "imaging · clinical · path" },
+    { name: "HIDDEN 1", sub: "64 neurons" },
+    { name: "HIDDEN 2", sub: "64 neurons" },
+    { name: "HIDDEN 3", sub: "64 neurons" },
+    { name: "HIDDEN 4", sub: "64 neurons" },
+    { name: "OUTPUT", sub: "risk · stiffness" },
+]
+
+const W = 640
+const H = 260
+const LAYER_SPACING = W / (NETWORK.length + 1)
+
+function getPos(layerIdx: number, nodeIdx: number, total: number) {
+    const x = (layerIdx + 1) * LAYER_SPACING
+    const nodeSpacing = 36
+    const totalH = (total - 1) * nodeSpacing
+    const y = H / 2 - totalH / 2 + nodeIdx * nodeSpacing
+    return { x, y }
+}
+
 export default function PINNArchitectureViz() {
-    // PINN Configuration: Input (x,t) -> 4 Hidden Layers -> Output (u,v,p)
-    // We visualize a subset of neurons for clarity but keep layer count accurate
-    const networkConfig = useMemo(() => [2, 6, 6, 6, 6, 3], [])
-    const layerNames = ["INPUT (x,t)", "HIDDEN 1", "HIDDEN 2", "HIDDEN 3", "HIDDEN 4", "OUTPUT (u,v,p)"]
-
-    // Animation state
     const [activeLayer, setActiveLayer] = useState(0)
+    const [phase, setPhase] = useState<"forward" | "backward">("forward")
 
-    // Simulate forward pass propogation
     useEffect(() => {
-        const interval = setInterval(() => {
-            setActiveLayer(prev => (prev + 1) % (networkConfig.length + 2)) // +2 for pause
-        }, 800)
-        return () => clearInterval(interval)
-    }, [networkConfig.length])
-
-    // Calculate node positions
-    const width = 600
-    const height = 300
-    const layerSpacing = width / (networkConfig.length + 1)
-
-    const getNodePos = (layerIdx: number, nodeIdx: number, totalNodes: number) => {
-        const x = (layerIdx + 1) * layerSpacing
-        // Center nodes vertically
-        const nodeSpacing = 40
-        const totalHeight = (totalNodes - 1) * nodeSpacing
-        const y = (height / 2) - (totalHeight / 2) + (nodeIdx * nodeSpacing)
-        return { x, y }
-    }
+        const id = setInterval(() => {
+            setActiveLayer(prev => {
+                const next = prev + 1
+                if (next >= NETWORK.length + 1) {
+                    setPhase(p => p === "forward" ? "backward" : "forward")
+                    return 0
+                }
+                return next
+            })
+        }, 700)
+        return () => clearInterval(id)
+    }, [])
 
     return (
         <section className="relative rounded-xl border border-primary/30 overflow-hidden bg-black flex flex-col shadow-neon-primary h-full">
-            <div className="absolute top-4 left-4 z-10">
-                <div className="bg-black/60 backdrop-blur text-xs font-display text-white px-3 py-1.5 rounded border border-white/10 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-accent-cyan animate-pulse"></span>
+
+            {/* Badge */}
+            <div className="absolute top-3 left-3 z-10">
+                <div className="bg-black/60 backdrop-blur text-[10px] font-display text-white px-3 py-1 rounded border border-white/10 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-accent-cyan animate-pulse" />
                     PINN ARCHITECTURE VISUALIZATION
                 </div>
             </div>
 
-            <div className="flex-1 relative flex items-center justify-center hologram-grid overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-primary/5"></div>
+            {/* Arch info */}
+            <div className="absolute top-3 right-3 z-10 flex flex-col items-end">
+                <div className="text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-0.5">Architecture</div>
+                <div className="text-[11px] font-mono text-accent-cyan">4 × 64 Fully Connected</div>
+                <div className="text-[9px] font-mono text-accent-magenta mt-0.5">Activation: Tanh · Dropout: 0.1</div>
+                <div className="text-[9px] font-mono text-gray-500 mt-0.5">Physics Loss: BCE + Stiffness Constraint</div>
+            </div>
 
-                <div className="absolute top-4 right-4 flex flex-col items-end z-10">
-                    <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-1">Architecture</div>
-                    <div className="text-xs font-mono text-accent-cyan">4 x 64 Fully Connected</div>
-                    <div className="text-[10px] font-mono text-accent-magenta mt-1">Activation: Tanh</div>
-                </div>
+            {/* SVG Canvas */}
+            <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-primary/5 pointer-events-none" />
 
-                <svg className="w-full h-full max-w-3xl mx-auto overflow-visible" viewBox={`0 0 ${width} ${height}`}>
+                <svg
+                    className="w-full h-full max-w-3xl mx-auto"
+                    viewBox={`-20 10 ${W + 40} ${H + 20}`}
+                    style={{ overflow: "visible" }}
+                >
                     <defs>
-                        <filter id="glow-node">
-                            <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
-                            <feMerge>
-                                <feMergeNode in="coloredBlur" />
-                                <feMergeNode in="SourceGraphic" />
-                            </feMerge>
+                        <filter id="glow-en">
+                            <feGaussianBlur stdDeviation="2.5" result="blur" />
+                            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
                         </filter>
                     </defs>
 
                     {/* Connections */}
-                    {networkConfig.map((nodeCount, layerIdx) => {
-                        if (layerIdx === networkConfig.length - 1) return null
-                        const nextNodeCount = networkConfig[layerIdx + 1]
-                        const isActive = activeLayer === layerIdx
+                    {NETWORK.map((count, li) => {
+                        if (li === NETWORK.length - 1) return null
+                        const nextCount = NETWORK[li + 1]
+                        const isActive = activeLayer === li
 
-                        // Generate all connections between current layer and next layer
-                        return Array.from({ length: nodeCount }).map((_, i) => (
-                            Array.from({ length: nextNodeCount }).map((_, j) => {
-                                const start = getNodePos(layerIdx, i, nodeCount)
-                                const end = getNodePos(layerIdx + 1, j, nextNodeCount)
+                        return Array.from({ length: count }, (_, i) =>
+                            Array.from({ length: nextCount }, (_, j) => {
+                                const s = getPos(li, i, count)
+                                const e = getPos(li + 1, j, nextCount)
                                 return (
                                     <motion.line
-                                        key={`conn-${layerIdx}-${i}-${j}`}
-                                        x1={start.x}
-                                        y1={start.y}
-                                        x2={end.x}
-                                        y2={end.y}
-                                        stroke={isActive ? "#00f0ff" : "#ff0055"}
-                                        strokeWidth={isActive ? 1.5 : 0.5}
-                                        strokeOpacity={isActive ? 0.8 : 0.15}
-                                        initial={false}
+                                        key={`c-${li}-${i}-${j}`}
+                                        x1={s.x} y1={s.y} x2={e.x} y2={e.y}
                                         animate={{
-                                            stroke: isActive ? "#00f0ff" : "#333",
-                                            strokeOpacity: isActive ? 0.6 : 0.1
+                                            stroke: isActive
+                                                ? (phase === "forward" ? "#00f0ff" : "#ff0055")
+                                                : "#222",
+                                            strokeOpacity: isActive ? 0.7 : 0.12,
+                                            strokeWidth: isActive ? 1.5 : 0.5,
                                         }}
-                                        transition={{ duration: 0.5 }}
+                                        transition={{ duration: 0.4 }}
                                     />
                                 )
                             })
-                        ))
+                        )
                     })}
 
-                    {/* Nodes */}
-                    {networkConfig.map((nodeCount, layerIdx) => (
-                        <g key={`layer-${layerIdx}`}>
-                            {Array.from({ length: nodeCount }).map((_, i) => {
-                                const pos = getNodePos(layerIdx, i, nodeCount)
-                                const isInput = layerIdx === 0
-                                const isOutput = layerIdx === networkConfig.length - 1
-                                const isActive = activeLayer === layerIdx || activeLayer === layerIdx - 1
+                    {/* Nodes + Layer labels */}
+                    {NETWORK.map((count, li) => {
+                        const isInput = li === 0
+                        const isOutput = li === NETWORK.length - 1
+                        const isActive = activeLayer === li || activeLayer === li - 1
+                        const meta = LAYER_META[li]
 
-                                return (
-                                    <motion.circle
-                                        key={`node-${layerIdx}-${i}`}
-                                        cx={pos.x}
-                                        cy={pos.y}
-                                        r={isInput || isOutput ? 6 : 4}
-                                        fill={isInput ? "#00f0ff" : isOutput ? "#ff0055" : "white"}
-                                        filter={isActive ? "url(#glow-node)" : ""}
-                                        opacity={isActive ? 1 : 0.5}
-                                        animate={{
-                                            scale: isActive ? 1.2 : 1,
-                                            fillOpacity: isActive ? 1 : 0.5
-                                        }}
-                                        transition={{ duration: 0.3 }}
-                                    />
-                                )
-                            })}
-                            {/* Layer Labels */}
-                            <text
-                                x={getNodePos(layerIdx, 0, nodeCount).x}
-                                y={height - 20}
-                                textAnchor="middle"
-                                fill="white"
-                                fontSize="8"
-                                fontFamily="monospace"
-                                opacity="0.6"
-                            >
-                                {layerNames[layerIdx]}
-                            </text>
-                        </g>
-                    ))}
+                        return (
+                            <g key={`layer-${li}`}>
+                                {Array.from({ length: count }, (_, ni) => {
+                                    const pos = getPos(li, ni, count)
+                                    const color = isInput
+                                        ? MODALITY_COLORS[ni]
+                                        : isOutput
+                                            ? OUTPUT_COLORS[ni]
+                                            : "#fff"
+                                    return (
+                                        <motion.circle
+                                            key={`n-${li}-${ni}`}
+                                            cx={pos.x} cy={pos.y}
+                                            r={isInput || isOutput ? 7 : 5}
+                                            fill={color}
+                                            filter={isActive ? "url(#glow-en)" : ""}
+                                            animate={{
+                                                fillOpacity: isActive ? 1.0 : 0.35,
+                                                r: isActive
+                                                    ? (isInput || isOutput ? 8 : 6)
+                                                    : (isInput || isOutput ? 7 : 5),
+                                            }}
+                                            transition={{ duration: 0.3 }}
+                                        />
+                                    )
+                                })}
+
+                                {/* Layer label — positioned ABOVE the nodes, not at bottom */}
+                                <text
+                                    x={getPos(li, 0, count).x}
+                                    y={H + 15}
+                                    textAnchor="middle"
+                                    fill={isInput ? "#00f0ff" : isOutput ? "#ffd166" : "rgba(255,255,255,0.7)"}
+                                    fontSize="7"
+                                    fontFamily="monospace"
+                                    fontWeight={isActive ? "bold" : "normal"}
+                                >
+                                    {meta.name}
+                                </text>
+                                <text
+                                    x={getPos(li, 0, count).x}
+                                    y={H + 25}
+                                    textAnchor="middle"
+                                    fill="rgba(150,180,220,0.6)"
+                                    fontSize="6"
+                                    fontFamily="monospace"
+                                >
+                                    {meta.sub}
+                                </text>
+                            </g>
+                        )
+                    })}
                 </svg>
+            </div>
 
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-8 text-[10px] font-mono text-gray-500 uppercase tracking-widest">
-                    <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${activeLayer < networkConfig.length ? "bg-accent-cyan shadow-[0_0_5px_cyan]" : "bg-gray-700"}`} />
-                        <span className={activeLayer < networkConfig.length ? "text-accent-cyan" : ""}>Forward Pass</span>
+            {/* Legend bar — completely separate from SVG, no overlap */}
+            <div className="flex-shrink-0 flex items-center justify-center gap-8 py-2 border-t border-white/5 text-[9px] font-mono uppercase tracking-wider">
+                {/* Modality legend */}
+                {[["#00f0ff", "Imaging 128d"], ["#ff0055", "Clinical 64d"], ["#0bda73", "Pathology 64d"]].map(([c, l]) => (
+                    <div key={l} className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c as string, boxShadow: `0 0 4px ${c}` }} />
+                        <span className="text-gray-500">{l}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${activeLayer >= networkConfig.length ? "bg-accent-magenta shadow-[0_0_5px_magenta]" : "bg-gray-700"}`} />
-                        <span className={activeLayer >= networkConfig.length ? "text-accent-magenta" : ""}>Backpropagation</span>
-                    </div>
+                ))}
+                <div className="w-px h-4 bg-white/10" />
+                {/* Phase indicator */}
+                <div className="flex items-center gap-1.5">
+                    <motion.span
+                        className="w-2 h-2 rounded-full flex-shrink-0"
+                        animate={{ background: phase === "forward" ? "#00f0ff" : "#ff0055" }}
+                    />
+                    <span className={phase === "forward" ? "text-accent-cyan" : "text-accent-magenta"}>
+                        {phase === "forward" ? "Forward Pass" : "Backprop"}
+                    </span>
                 </div>
             </div>
         </section>

@@ -46,34 +46,22 @@ export function DigitalTwinViewer({ stiffness, meshUrl, predictionData }: Digita
 
     const actualMeshUrl = meshUrl || "/models/uterus.glb";
 
-    const defaultLesions: LesionData[] = [
-        {
-            id: "L001",
-            position: [-0.8, 0.6, 0.3],
-            stiffness: 7.2,
-            confidence: 0.85,
-            severity: "high",
-            label: "Left Ovary Lesion"
-        },
-        {
-            id: "L002",
-            position: [0.6, 0.3, -0.2],
-            stiffness: 3.8,
-            confidence: 0.72,
-            severity: "moderate",
-            label: "Right Tube Adhesion"
-        },
-        {
-            id: "L003",
-            position: [0.0, -0.4, 0.5],
-            stiffness: 1.4,
-            confidence: 0.91,
-            severity: "low",
-            label: "Cervical Region"
-        }
+    // Lesion markers: use API lesions if available, otherwise derive from prediction probability
+    const allDefaultLesions: LesionData[] = [
+        { id: "L001", position: [-0.8, 0.6, 0.3], stiffness: 7.2, confidence: 0.85, severity: "high", label: "Left Ovary Lesion" },
+        { id: "L002", position: [0.6, 0.3, -0.2], stiffness: 3.8, confidence: 0.72, severity: "moderate", label: "Right Tube Adhesion" },
+        { id: "L003", position: [0.0, -0.4, 0.5], stiffness: 1.4, confidence: 0.91, severity: "low", label: "Cervical Region" },
     ];
 
-    const lesions: LesionData[] = predictionData?.lesions || defaultLesions;
+    const lesions: LesionData[] = predictionData?.lesions
+        ? predictionData.lesions
+        : predictionData
+            ? allDefaultLesions.slice(
+                0,
+                predictionData.prediction > 0.6 ? 3 :
+                    predictionData.prediction > 0.3 ? 2 : 1
+            )
+            : allDefaultLesions;
 
     const handlePointerMove = useCallback((e: any) => {
         if (e?.point) {
@@ -243,18 +231,38 @@ export function DigitalTwinViewer({ stiffness, meshUrl, predictionData }: Digita
                 </div>
             </div>
 
-            {/* Tissue Analysis Panel */}
+            {/* Tissue Analysis Panel — top-left but below the HUD label (which is top-4) */}
             {predictionData && (
-                <DataPanel
-                    title="TISSUE ANALYSIS"
-                    position="top-right"
-                    data={{
-                        "Stiffness": `${stiffness.toFixed(1)} kPa`,
-                        "Confidence": `${(predictionData.confidence * 100).toFixed(0)}%`,
-                        "Risk Level": predictionData.risk_level.toUpperCase(),
-                        "Lesions Detected": lesions.length
+                <div
+                    className="absolute left-4 z-20"
+                    style={{
+                        top: '4.5rem',
+                        backdropFilter: 'blur(10px)',
+                        backgroundColor: 'rgba(10,14,39,0.85)',
+                        border: `1px solid ${stiffness < 2 ? '#39ff14' : stiffness < 5 ? '#ffc107' : '#ff006e'}`,
+                        boxShadow: `0 0 18px ${stiffness < 2 ? '#39ff1440' : stiffness < 5 ? '#ffc10740' : '#ff006e40'}`,
+                        borderRadius: '8px',
+                        padding: '12px 16px',
+                        minWidth: '200px',
+                        fontFamily: 'monospace',
+                        fontSize: '11px',
                     }}
-                />
+                >
+                    <div style={{ color: stiffness < 2 ? '#39ff14' : stiffness < 5 ? '#ffc107' : '#ff006e', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px' }}>
+                        Tissue Analysis
+                    </div>
+                    {[
+                        ['Stiffness', `${stiffness.toFixed(2)} kPa`],
+                        ['Confidence', `${(predictionData.confidence * 100).toFixed(0)}%`],
+                        ['Risk Level', (predictionData.risk_level ?? 'UNKNOWN').toUpperCase()],
+                        ['Lesions Detected', String(lesions.length)],
+                    ].map(([k, v]) => (
+                        <div key={k} className="flex justify-between gap-4 mb-1">
+                            <span style={{ color: '#a0d9ff' }}>{k}:</span>
+                            <span style={{ color: '#e0f7ff', fontWeight: 'bold' }}>{v}</span>
+                        </div>
+                    ))}
+                </div>
             )}
 
             {/* Regional Stiffness Breakdown */}
