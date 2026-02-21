@@ -27,10 +27,10 @@ export default function Header() {
             </div>
 
             {/* Navigation */}
-            {/* Navigation */}
             <nav className="hidden md:flex items-center gap-1 bg-black/20 p-1 rounded-full border border-white/5">
                 {[
-                    { name: 'Simulation', path: '/' },
+                    { name: 'Dashboard', path: '/' },
+                    { name: 'Simulation', path: '/simulation' },
                     { name: 'Training', path: '/training' },
                     { name: 'Analytics', path: '/analytics' },
                     { name: 'Settings', path: '/settings' }
@@ -40,7 +40,7 @@ export default function Header() {
                         <Link
                             key={item.path}
                             href={item.path}
-                            className={`px-5 py-1.5 rounded-full text-sm font-medium transition-all ${isActive
+                            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${isActive
                                 ? 'bg-primary/20 text-white shadow-neon-primary border border-primary/50'
                                 : 'text-gray-400 hover:text-white hover:bg-white/5'
                                 }`}

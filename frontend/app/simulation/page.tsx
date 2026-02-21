@@ -6,8 +6,7 @@ import PatientInputForm from "@/components/patient-input-form"
 import { DigitalTwinViewer } from "@/components/three/digital-twin-viewer"
 import { predict, type PredictionResponse } from "@/lib/api"
 import { encodePatientReport, type PatientReport } from "@/lib/patient-encoder"
-import { useToast } from "@/components/ui/use-toast"
-import { Activity, AlertTriangle, CheckCircle, Info } from "lucide-react"
+import { Activity, AlertTriangle, CheckCircle, Info, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 const RISK_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: React.ReactNode }> = {
@@ -32,7 +31,12 @@ function ResultMetric({ label, value, unit = "", accent = "accent-cyan" }:
 export default function SimulationPage() {
     const [prediction, setPrediction] = useState<PredictionResponse | null>(null)
     const [isLoading, setIsLoading] = useState(false)
-    const { toast } = useToast()
+    const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+
+    const showToast = (type: 'success' | 'error', message: string) => {
+        setToast({ type, message })
+        setTimeout(() => setToast(null), 4000)
+    }
 
     const handlePredict = async (report: PatientReport) => {
         setIsLoading(true)
@@ -44,16 +48,9 @@ export default function SimulationPage() {
                 pathology_features: encoded.pathology_features,
             })
             setPrediction(result)
-            toast({
-                title: "Prediction Complete",
-                description: `Risk: ${result.risk_level} · Stiffness: ${result.stiffness.toFixed(2)} kPa`,
-            })
+            showToast('success', `Risk: ${result.risk_level} · Stiffness: ${result.stiffness.toFixed(2)} kPa`)
         } catch {
-            toast({
-                title: "Prediction Failed",
-                description: "Ensure all nodes are online and the model is trained.",
-                variant: "destructive",
-            })
+            showToast('error', 'Prediction failed. Ensure nodes are online and model is trained.')
         } finally {
             setIsLoading(false)
         }
@@ -65,15 +62,34 @@ export default function SimulationPage() {
         <div className="flex flex-col h-screen overflow-hidden bg-background-dark text-white font-body">
             <Header />
 
-            <main className="flex-1 p-4 grid grid-cols-12 gap-4 overflow-hidden">
+            {/* Toast Notification */}
+            <AnimatePresence>
+                {toast && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className={`fixed top-16 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border ${toast.type === 'success'
+                            ? 'bg-green-900/80 border-green-500/50 text-green-200'
+                            : 'bg-red-900/80 border-red-500/50 text-red-200'
+                            }`}
+                    >
+                        {toast.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+                        <span className="text-xs font-mono">{toast.message}</span>
+                        <button onClick={() => setToast(null)}><X className="w-3 h-3 opacity-60 hover:opacity-100" /></button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <main className="flex-1 p-4 grid grid-cols-12 gap-4 overflow-hidden min-h-0">
 
                 {/* ── LEFT: Patient Input Form (3 cols) ── */}
-                <div className="col-span-12 lg:col-span-3 h-full overflow-hidden">
+                <div className="col-span-12 lg:col-span-3 h-full overflow-hidden min-h-0">
                     <PatientInputForm onPredict={handlePredict} isLoading={isLoading} />
                 </div>
 
                 {/* ── CENTER: 3D Viewer (6 cols) ── */}
-                <div className="col-span-12 lg:col-span-6 h-full relative">
+                <div className="col-span-12 lg:col-span-6 h-full relative min-h-0">
                     <DigitalTwinViewer
                         stiffness={prediction?.stiffness ?? 2.0}
                         predictionData={prediction ?? undefined}
@@ -193,7 +209,7 @@ export default function SimulationPage() {
                                         animate={{ width: `${Math.min((prediction.stiffness / 10) * 100, 100)}%` }}
                                         transition={{ duration: 0.8, ease: "easeOut" }}
                                         className={`h-full rounded-full ${prediction.stiffness < 2 ? "bg-green-500" :
-                                                prediction.stiffness < 5 ? "bg-yellow-500" : "bg-red-500"
+                                            prediction.stiffness < 5 ? "bg-yellow-500" : "bg-red-500"
                                             }`}
                                     />
                                 </div>

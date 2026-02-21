@@ -18,9 +18,11 @@ export interface RegionalAnalysis {
 
 export interface PredictionResponse {
     prediction: number;
-    overall_stiffness: number;
+    stiffness: number;           // kPa — from /predict endpoint
+    overall_stiffness?: number;  // alias (optional, same field)
     confidence: number;
-    risk_level: 'low' | 'moderate' | 'high';
+    risk_level: string;          // "LOW" | "MODERATE" | "HIGH" | "MINIMAL" from backend
+    timestamp?: string;
     regional_analysis?: {
         fundus?: RegionalAnalysis;
         left_ovary?: RegionalAnalysis;
