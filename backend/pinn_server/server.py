@@ -348,10 +348,14 @@ async def train_federated(request: TrainRequest, background_tasks: BackgroundTas
             
             # Forward pass
             prediction, stiffness = model(imaging_batch, clinical_batch, pathology_batch)
-            
+
+            # Normalize outputs to valid ranges for loss computation
+            prediction = torch.sigmoid(prediction)          # → [0, 1] for BCELoss
+            stiffness  = torch.clamp(stiffness, 0.0, 10.0)  # kPa range
+
             # Compute loss
             loss, loss_dict = loss_fn((prediction, stiffness), labels)
-            
+
             # Backward pass
             optimizer.zero_grad()
             loss.backward()
