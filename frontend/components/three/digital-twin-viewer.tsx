@@ -1,14 +1,31 @@
 "use client"
 
-import { Suspense, useState, useCallback } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Suspense, useState, useCallback, useRef } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, Html } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
+import * as THREE from "three";
 import { BackendMesh } from "./backend-mesh";
 import { LesionMarker } from "./lesion-marker";
 import { HolographicParticles, HolographicGrid } from "./holographic-effects";
 import { DataPanel, StiffnessBar } from "../visualization/data-panel";
 import type { PredictionResponse, LesionData } from "@/types/prediction";
+
+/**
+ * RotatingGroup
+ * Must live inside <Canvas> so it can call useFrame.
+ * Wraps the uterus mesh + lesion markers so they all rotate together,
+ * keeping anatomical alignment between markers and mesh surface.
+ */
+function RotatingGroup({ speed = 0.1, children }: { speed?: number; children: React.ReactNode }) {
+    const groupRef = useRef<THREE.Group>(null);
+    useFrame((state) => {
+        if (groupRef.current) {
+            groupRef.current.rotation.y = state.clock.elapsedTime * speed;
+        }
+    });
+    return <group ref={groupRef}>{children}</group>;
+}
 
 interface DigitalTwinViewerProps {
     stiffness: number;
@@ -77,16 +94,9 @@ export function DigitalTwinViewer({ stiffness, meshUrl, predictionData }: Digita
                 stiffness: 3.0, confidence: 0.5, severity: 'moderate' as const
             }));
 
-    const handlePointerMove = useCallback((e: any) => {
-        if (e?.point) {
-            const y = e.point.y;
-            const simulated = Math.max(0.5, stiffness + Math.sin(y * 3) * 2);
-            setHoveredStiffness(parseFloat(simulated.toFixed(1)));
-        }
-    }, [stiffness]);
-
-    const handlePointerLeave = useCallback(() => {
-        setHoveredStiffness(null);
+    // Real hover stiffness comes from BackendMesh onHoverStiffness callback (per-vertex GPU attribute)
+    const handleHoverStiffness = useCallback((kPa: number | null) => {
+        setHoveredStiffness(kPa);
     }, []);
 
     return (
@@ -108,21 +118,32 @@ export function DigitalTwinViewer({ stiffness, meshUrl, predictionData }: Digita
                 <pointLight position={[5, -5, 0]} intensity={0.8} color="#0000ff" />
                 <pointLight position={[0, 5, 3]} intensity={0.5} color="#00ffff" />
 
-                {/* 3D Model */}
+                {/* RotatingGroup: mesh + markers spin together → anatomical alignment guaranteed */}
                 <Suspense fallback={null}>
-                    <group
-                        onPointerMove={handlePointerMove}
-                        onPointerLeave={handlePointerLeave}
-                    >
+                    <RotatingGroup speed={0.1}>
                         <BackendMesh
                             stiffness={stiffness}
                             meshUrl={actualMeshUrl}
                             heatmapEnabled={heatmapEnabled}
+                            onHoverStiffness={handleHoverStiffness}
                         />
-                        {hoveredStiffness !== null && (
-                            <StiffnessTooltip stiffness={hoveredStiffness} />
-                        )}
-                    </group>
+                        {lesions.map((lesion) => (
+                            <LesionMarker
+                                key={lesion.id}
+                                position={lesion.position}
+                                stiffness={lesion.stiffness}
+                                confidence={lesion.confidence}
+                                severity={lesion.severity}
+                                label={lesion.label}
+                                showCallout={false}
+                            />
+                        ))}
+                    </RotatingGroup>
+
+                    {/* Tooltip sits outside RotatingGroup — tracks cursor, not model */}
+                    {hoveredStiffness !== null && (
+                        <StiffnessTooltip stiffness={hoveredStiffness} />
+                    )}
                 </Suspense>
 
                 {/* Particles */}
@@ -136,20 +157,7 @@ export function DigitalTwinViewer({ stiffness, meshUrl, predictionData }: Digita
                     <HolographicGrid />
                 </group>
 
-                {/* Lesion Markers + Callouts */}
-                {lesions.map((lesion) => (
-                    <LesionMarker
-                        key={lesion.id}
-                        position={lesion.position}
-                        stiffness={lesion.stiffness}
-                        confidence={lesion.confidence}
-                        severity={lesion.severity}
-                        label={lesion.label}
-                        showCallout={false}
-                    />
-                ))}
-
-                {/* Post Processing: UnrealBloom + FXAA */}
+                {/* Post Processing: Bloom */}
                 <EffectComposer multisampling={8}>
                     <Bloom
                         intensity={1.2}
@@ -160,14 +168,12 @@ export function DigitalTwinViewer({ stiffness, meshUrl, predictionData }: Digita
                     />
                 </EffectComposer>
 
-                {/* Controls */}
+                {/* Controls — autoRotate removed (replaced by RotatingGroup) */}
                 <OrbitControls
                     enableZoom={true}
                     enablePan={true}
                     minDistance={2}
                     maxDistance={10}
-                    autoRotate
-                    autoRotateSpeed={0.5}
                 />
             </Canvas>
 
