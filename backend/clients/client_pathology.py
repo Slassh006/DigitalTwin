@@ -85,46 +85,29 @@ def generate_mock_pathology_data(patient_id: str) -> Dict:
     
     return {
         "patient_id": patient_id,
-        # Inflammatory markers
-        "ca125": np.random.uniform(10, 100),  # U/mL (elevated in endometriosis)
-        "ca199": np.random.uniform(5, 50),
-        "crp": np.random.uniform(0.1, 10.0),  # C-reactive protein mg/L
-        "esr": np.random.randint(5, 40),  # Erythrocyte sedimentation rate mm/hr
-        
-        # Hormonal markers
-        "estradiol": np.random.uniform(50, 400),  # pg/mL
-        "progesterone": np.random.uniform(1, 20),  # ng/mL
-        "fsh": np.random.uniform(2, 15),  # Follicle-stimulating hormone mIU/mL
-        "lh": np.random.uniform(2, 15),  # Luteinizing hormone mIU/mL
-        
-        # Complete blood count
-        "wbc": np.random.uniform(4.0, 11.0),  # White blood cells 10^9/L
-        "hemoglobin": np.random.uniform(11.5, 16.0),  # g/dL
-        "platelets": np.random.randint(150, 400),  # 10^9/L
-        
-        # Other markers
-        "anti_mullerian_hormone": np.random.uniform(0.5, 5.0),  # ng/mL
-        "vegf": np.random.uniform(50, 500),  # Vascular endothelial growth factor pg/mL
+        "Age(years)": np.random.randint(20, 50),
+        "WBC(G/L)": np.random.uniform(4.0, 11.0),
+        "RBC(T/L)": np.random.uniform(3.5, 5.5),
+        "HGB(g/L)": np.random.uniform(115.0, 160.0),
+        "PLT*(G/L)": np.random.randint(150, 400),
+        "NLR": np.random.uniform(1.0, 3.5),
+        "Neu%(%)": np.random.uniform(40.0, 75.0),
+        "Lym%(%)": np.random.uniform(20.0, 45.0),
     }
 
 
 def extract_pathology_features(data: Dict, feature_dim: int = 64) -> np.ndarray:
-    """Extract and normalize pathology features."""
+    """Extract and normalize actual lab report pathology features."""
     # Normalize each marker to [0, 1] based on typical ranges
     normalized = np.array([
-        data.get("ca125", 35) / 100.0,
-        data.get("ca199", 25) / 50.0,
-        data.get("crp", 3.0) / 10.0,
-        data.get("esr", 20) / 40.0,
-        data.get("estradiol", 200) / 400.0,
-        data.get("progesterone", 10) / 20.0,
-        data.get("fsh", 8) / 15.0,
-        data.get("lh", 8) / 15.0,
-        data.get("wbc", 7.5) / 11.0,
-        data.get("hemoglobin", 13.5) / 16.0,
-        data.get("platelets", 250) / 400.0,
-        data.get("anti_mullerian_hormone", 2.5) / 5.0,
-        data.get("vegf", 250) / 500.0,
+        float(data.get("Age(years)", 30)) / 60.0,
+        float(data.get("WBC(G/L)", 7.5)) / 15.0,
+        float(data.get("RBC(T/L)", 4.5)) / 6.0,
+        float(data.get("HGB(g/L)", 135)) / 200.0,
+        float(data.get("PLT*(G/L)", 250)) / 500.0,
+        float(data.get("NLR", 2.0)) / 5.0,
+        float(data.get("Neu%(%)", 50.0)) / 100.0,
+        float(data.get("Lym%(%)", 30.0)) / 100.0,
     ])
     
     # Expand to target dimension

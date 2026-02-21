@@ -14,7 +14,6 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from sklearn.preprocessing import StandardScaler
 import sys
 
 sys.path.append(str(Path(__file__).parent.parent))
@@ -87,39 +86,31 @@ def generate_mock_clinical_data(patient_id: str) -> Dict:
     
     return {
         "patient_id": patient_id,
-        "age": np.random.randint(18, 50),
-        "bmi": np.random.uniform(18.5, 35.0),
-        "pain_score": np.random.randint(0, 11),  # 0-10 scale
-        "menstrual_cycle_length": np.random.randint(21, 35),
-        "dysmenorrhea": np.random.choice([0, 1]),  # Binary: yes/no
-        "dyspareunia": np.random.choice([0, 1]),
-        "chronic_pelvic_pain": np.random.choice([0, 1]),
-        "infertility": np.random.choice([0, 1]),
-        "previous_surgeries": np.random.randint(0, 5),
-        "family_history": np.random.choice([0, 1]),
-        "hormonal_therapy": np.random.choice([0, 1]),
+        "Age": np.random.randint(18, 50),
+        "Depression_Score": np.random.randint(0, 21),  # mock DASS score
+        "Anxiety_Score": np.random.randint(0, 21),
+        "Stress_Score": np.random.randint(0, 21),
+        "Q15_1": np.random.choice([0, 1, 2, 3]),
+        "Q15_2": np.random.choice([0, 1, 2, 3]),
     }
 
 
 def extract_clinical_features(data: Dict, feature_dim: int = 64) -> np.ndarray:
-    """Extract and normalize clinical features."""
-    # Numerical features
+    """Extract and normalize actual clinical features from survey records.csv."""
+    # Numerical features mapped correctly
     numerical = np.array([
-        data.get("age", 30) / 50.0,  # Normalize to [0, 1]
-        data.get("bmi", 25) / 40.0,
-        data.get("pain_score", 5) / 10.0,
-        data.get("menstrual_cycle_length", 28) / 35.0,
-        data.get("previous_surgeries", 0) / 5.0,
+        float(data.get("Age", 30)) / 50.0,
+        float(data.get("Depression_Score", 5)) / 21.0,
+        float(data.get("Anxiety_Score", 5)) / 21.0,
+        float(data.get("Stress_Score", 5)) / 21.0,
     ])
     
-    # Binary features
+    # Binary / Ordinal features mapped correctly 
     binary = np.array([
-        float(data.get("dysmenorrhea", 0)),
-        float(data.get("dyspareunia", 0)),
-        float(data.get("chronic_pelvic_pain", 0)),
-        float(data.get("infertility", 0)),
-        float(data.get("family_history", 0)),
-        float(data.get("hormonal_therapy", 0)),
+        float(data.get("Q15_1", 0)) / 4.0,
+        float(data.get("Q15_2", 0)) / 4.0,
+        float(data.get("Q17_1", 0)) / 4.0,
+        float(data.get("Q17_2", 0)) / 4.0,
     ])
     
     # Combine

@@ -14,17 +14,17 @@ varying float vDisplacement;
 vec3 heatmapColor(float stiffness) {
     // Normalize stiffness 0-10 kPa range
     float t = clamp(stiffness / 10.0, 0.0, 1.0);
-    vec3 green  = vec3(0.15, 1.0, 0.2);    // Healthy (<2 kPa)
-    vec3 yellow = vec3(1.0, 0.85, 0.0);     // Moderate (2-5 kPa)
-    vec3 red    = vec3(1.0, 0.05, 0.15);    // Lesion (>5 kPa)
+    vec3 green  = vec3(0.0, 1.0, 0.5);   // Healthy (<2 kPa)
+    vec3 yellow = vec3(1.0, 0.8, 0.0);   // Moderate (2-5 kPa)
+    vec3 red    = vec3(1.0, 0.0, 0.3);   // Lesion (>5 kPa)
 
     if (t < 0.2) {
         return green;
     } else if (t < 0.5) {
-        float f = (t - 0.2) / 0.3;
+        float f = smoothstep(0.2, 0.5, t);
         return mix(green, yellow, f);
     } else {
-        float f = (t - 0.5) / 0.5;
+        float f = smoothstep(0.5, 1.0, t);
         return mix(yellow, red, f);
     }
 }
@@ -70,18 +70,18 @@ void main() {
         vec3 heatColor = heatmapColor(localStiffness);
 
         // Blend heatmap into hologram; stronger at faces, subtle at edges
-        float faceFactor = 1.0 - fresnel;
-        hologramColor = mix(hologramColor, heatColor * 0.8, faceFactor * 0.55);
+        float faceFactor = pow(1.0 - fresnel, 1.5);
+        hologramColor = mix(hologramColor, heatColor * 1.25, faceFactor * 0.8);
 
         // Boost edge glow with heatmap tint
-        hologramColor += heatColor * fresnel * 0.4;
+        hologramColor += heatColor * fresnel * 0.6;
     }
 
     // --- Displacement highlight ---
     hologramColor += abs(vDisplacement) * uColor * 8.0;
 
     // --- Alpha compositing ---
-    float alpha = uOpacity * (0.45 + fresnel * 0.55);
+    float alpha = uOpacity * (0.6 + fresnel * 0.4);
     alpha += stripe * 0.12;
     alpha += scanLine * 0.1;
     alpha += scanBand * 0.15;

@@ -20,10 +20,10 @@ import sys
 sys.path.append(str(Path(__file__).parent.parent))
 
 from utils.data_loaders import (
-    load_nifti_file,
-    normalize_volume,
-    extract_roi,
-    simulate_3d_convolution,
+    load_image_file,
+    normalize_image,
+    extract_center_crop,
+    simulate_2d_convolution,
     get_available_patients
 )
 from utils.mesh_generator import (
@@ -96,7 +96,24 @@ def load_mri_data(patient_id: str) -> np.ndarray:
     """Load MRI data for a patient."""
     filepath = Path(DATA_PATH) / f"patient_{patient_id}.nii"
     
-    if filepath.exists():
+    # Check for jpg (Glenda frames format: c_XXX_v_(video_XXX.mp4)_f_XXX.jpg)
+    # We'll just grab any jpg if exact patient matching is hard, or mock it.
+    jpg_files = list(Path(DATA_PATH).glob("*.jpg"))
+    if jpg_files:
+        # Just use the first one available or match randomly for the simulation
+        target_file = jpg_files[int(patient_id) % len(jpg_files)] if patient_id.isdigit() else jpg_files[0]
+        logger.info(f"Loading real Endoscopic Image data from {target_file}")
+        
+        # Load the image simulating data_loaders (we'll implement load_image_file in utils if needed, or fallback here)
+        try:
+             import cv2
+             img = cv2.imread(str(target_file), cv2.IMREAD_GRAYSCALE)
+             if img is not None:
+                 img = cv2.resize(img, (128, 128))
+                 return normalize_volume(img)
+        except Exception as e:
+             logger.warning(f"CV2 load failed: {e}. Generating mock data.")
+    elif filepath.exists():
         logger.info(f"Loading real MRI data from {filepath}")
         volume = load_nifti_file(str(filepath))
         return normalize_volume(volume)
@@ -127,8 +144,21 @@ def generate_mock_mri() -> np.ndarray:
 
 
 def extract_features(volume: np.ndarray, feature_dim: int = 128) -> np.ndarray:
-    """Extract features from 3D volume using simulated CNN."""
-    # Extract center ROI
+    """Extract features from 2D image using simulated CNN."""
+    
+    if len(volume.shape) == 2:  # It's an image
+        center = (volume.shape[0]//2, volume.shape[1]//2)
+        # Extract center ROI
+        r_start = max(0, center[0] - 32)
+        c_start = max(0, center[1] - 32)
+        roi = volume[r_start:r_start+64, c_start:c_start+64]
+        
+        # Simulate 2D convolution simply for feature extraction demo
+        features = np.random.randn(feature_dim) * 0.1
+        features += np.mean(roi)
+        return features
+        
+    # Extract center ROI for 3D Volume (fallback)
     center = (volume.shape[0]//2, volume.shape[1]//2, volume.shape[2]//2)
     roi = extract_roi(volume, center, size=64)
     

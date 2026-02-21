@@ -4,3 +4,4 @@ metadata:
   name: frontend
   labels:
     name: frontend
+    type: presentation

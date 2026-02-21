@@ -22,11 +22,16 @@ class EndometriosisDataset(Dataset):
     
     def __init__(
         self,
-        clinical_path: str = "../data/clinical/patient_records.csv",
-        pathology_path: str = "../data/pathology/lab_results.csv",
-        labels_path: str = "../data/labels/ground_truth.csv",
-        imaging_features_path: Optional[str] = "../data/imaging/features.csv"
+        clinical_path: Optional[str] = None,
+        pathology_path: Optional[str] = None,
+        labels_path: Optional[str] = None,
+        imaging_features_path: Optional[str] = None
     ):
+        DATA_PATH = os.getenv("DATA_PATH", "/app/data")
+        self.clinical_path = clinical_path or f"{DATA_PATH}/clinical/records.csv"
+        self.pathology_path = pathology_path or f"{DATA_PATH}/pathology/lab_reports.csv"
+        self.labels_path = labels_path or f"{DATA_PATH}/ground_truth.csv"
+        self.imaging_features_path = imaging_features_path
         """
         Initialize dataset from CSV files.
         
@@ -128,14 +133,14 @@ class EndometriosisDataset(Dataset):
         
         # Get clinical features
         clinical_row = self.clinical_df[self.clinical_df['patient_id'].astype(str) == patient_id].iloc[0]
+        # Map actual real dataset headers
         clinical_features = torch.tensor([
-            float(clinical_row['age']),
-            float(clinical_row['bmi']),
-            float(clinical_row['pain_score']),
-            float(clinical_row['dysmenorrhea']),
-            float(clinical_row['pelvic_pain']),
-            float(clinical_row['infertility']),
-            float(clinical_row['menstrual_irregularity']),
+            float(clinical_row.get('Age', 30)) / 60.0,
+            float(clinical_row.get('Depression_Score', 0)) / 21.0,
+            float(clinical_row.get('Anxiety_Score', 0)) / 21.0,
+            float(clinical_row.get('Stress_Score', 0)) / 21.0,
+            float(clinical_row.get('Q15_1', 0)) / 4.0,
+            float(clinical_row.get('Q17_1', 0)) / 4.0,
         ], dtype=torch.float32)
         
         # Pad to expected dimension (64)
@@ -144,11 +149,11 @@ class EndometriosisDataset(Dataset):
         # Get pathology features
         pathology_row = self.pathology_df[self.pathology_df['patient_id'].astype(str) == patient_id].iloc[0]
         pathology_features = torch.tensor([
-            float(pathology_row['ca125']),
-            float(pathology_row['ca19_9']),
-            float(pathology_row['cea']),
-            float(pathology_row['hemoglobin']),
-            float(pathology_row['wbc']),
+            float(pathology_row.get('Age(years)', 30)) / 60.0,
+            float(pathology_row.get('WBC(G/L)', 7.5)) / 15.0,
+            float(pathology_row.get('HGB(g/L)', 135)) / 200.0,
+            float(pathology_row.get('NLR', 2.0)) / 5.0,
+            float(pathology_row.get('PLT*(G/L)', 250)) / 500.0,
         ], dtype=torch.float32)
         
         # Pad to expected dimension (64)
