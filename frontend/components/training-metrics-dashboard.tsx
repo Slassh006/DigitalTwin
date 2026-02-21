@@ -1,86 +1,66 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import { getAnalyticsMetrics, type AnalyticsMetrics } from "@/lib/api"
+import { getAnalyticsMetrics, getLogs, type AnalyticsMetrics, type LogEntry } from "@/lib/api"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { motion, AnimatePresence } from "framer-motion"
 
-interface SystemLog {
-    id: string;
-    timestamp: string;
-    type: 'INFO' | 'WARN' | 'SUCCESS' | 'ERROR' | 'TRAIN';
-    message: string;
+const LOG_COLORS: Record<string, string> = {
+    INFO: 'text-primary',
+    TRAIN: 'text-accent-cyan',
+    SUCCESS: 'text-success',
+    WARN: 'text-yellow-400',
+    ERROR: 'text-red-500',
+    DEBUG: 'text-gray-600',
 }
 
 export default function TrainingMetricsDashboard() {
     const [metrics, setMetrics] = useState<AnalyticsMetrics | null>(null)
-    const [logs, setLogs] = useState<SystemLog[]>([])
+    const [logs, setLogs] = useState<LogEntry[]>([])
     const logsEndRef = useRef<HTMLDivElement>(null)
-    const processedEpochs = useRef<Set<number>>(new Set())
+    const lastIdRef = useRef<string | undefined>(undefined)
 
-    // Initial logs
-    useEffect(() => {
-        setLogs([
-            { id: 'init-1', timestamp: new Date().toLocaleTimeString(), type: 'INFO', message: 'System initialized. Connecting to PINN backend...' },
-            { id: 'init-2', timestamp: new Date().toLocaleTimeString(), type: 'INFO', message: 'Loading pre-trained physics constraints...' },
-        ])
-    }, [])
-
+    // Fetch analytics metrics every 5s
     useEffect(() => {
         const fetchData = async () => {
-            try {
-                const data = await getAnalyticsMetrics()
-                setMetrics(data)
-
-                // Generate logs based on new data
-                if (data.latest_run?.epochs) {
-                    const latestEpoch = data.latest_run.epochs[data.latest_run.epochs.length - 1]
-                    if (latestEpoch && !processedEpochs.current.has(latestEpoch.epoch)) {
-                        processedEpochs.current.add(latestEpoch.epoch)
-
-                        // Add log for new epoch
-                        addLog({
-                            type: 'TRAIN',
-                            message: `Epoch ${latestEpoch.epoch}/${data.total_epochs_trained + 10} completed. Loss: ${latestEpoch.loss.toFixed(4)}`
-                        })
-
-                        // Randomly add physics validation
-                        if (Math.random() > 0.7) {
-                            setTimeout(() => {
-                                addLog({
-                                    type: 'SUCCESS',
-                                    message: `Physics boundary conditions verified. Residual: ${(Math.random() * 0.01).toFixed(5)}`
-                                })
-                            }, 500)
-                        }
-                    }
-                }
-            } catch (error) {
-                // accessible error log
-                console.error(error)
-            }
+            try { setMetrics(await getAnalyticsMetrics()) } catch { }
         }
-
         fetchData()
-        const interval = setInterval(fetchData, 3000)
-        return () => clearInterval(interval)
+        const iv = setInterval(fetchData, 5000)
+        return () => clearInterval(iv)
     }, [])
 
-    // Auto-scroll logs
+    // Real-time log polling every 2s (incremental)
     useEffect(() => {
-        logsEndRef.current?.scrollIntoView({ behavior: "smooth" })
-    }, [logs])
-
-    const addLog = (log: Omit<SystemLog, 'id' | 'timestamp'>) => {
-        setLogs(prev => {
-            const newLog = {
-                id: Math.random().toString(36).substr(2, 9),
-                timestamp: new Date().toLocaleTimeString(),
-                ...log
+        const init = async () => {
+            try {
+                const data = await getLogs(undefined, 30)
+                if (data.logs.length > 0) {
+                    setLogs(data.logs)
+                    lastIdRef.current = data.logs[data.logs.length - 1].id
+                } else {
+                    setLogs([{ id: '0', timestamp: new Date().toLocaleTimeString(), type: 'INFO', message: 'System initialized. Connecting to PINN backend...' }])
+                }
+            } catch {
+                setLogs([{ id: '0', timestamp: new Date().toLocaleTimeString(), type: 'INFO', message: 'System initialized. Connecting to PINN backend...' }])
             }
-            return [...prev.slice(-50), newLog] // Keep last 50
-        })
-    }
+        }
+        init()
+
+        const poll = setInterval(async () => {
+            try {
+                const data = await getLogs(lastIdRef.current, 20)
+                if (data.count > 0) {
+                    setLogs(prev => [...prev, ...data.logs].slice(-50))
+                    lastIdRef.current = data.logs[data.logs.length - 1].id
+                }
+            } catch { }
+        }, 2000)
+        return () => clearInterval(poll)
+    }, [])
+
+    // Auto-scroll
+    useEffect(() => { logsEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [logs])
 
     // Chart Data Preparation
     const chartData = metrics?.latest_run?.epochs?.map(e => ({

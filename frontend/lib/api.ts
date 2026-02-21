@@ -31,13 +31,18 @@ export interface FederatedNodesStatus {
     nodes: NodeStatus[];
 }
 
-export async function predict(patientId?: string): Promise<PredictionResponse> {
+export interface PatientPredictInput {
+    patient_id?: string
+    imaging_features?: number[]
+    clinical_features?: number[]
+    pathology_features?: number[]
+}
+
+export async function predict(input?: PatientPredictInput): Promise<PredictionResponse> {
     const response = await fetch(`${API_BASE_URL}/predict`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ patient_id: patientId }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input ?? {}),
     });
 
     if (!response.ok) {
@@ -251,5 +256,22 @@ export async function getAnalyticsMetrics(): Promise<AnalyticsMetrics> {
         throw new Error('Failed to fetch analytics metrics');
     }
 
+    return response.json();
+}
+
+// ==================== Real-time Log Streaming ====================
+
+export interface LogEntry {
+    id: string;
+    timestamp: string;
+    type: 'INFO' | 'WARN' | 'ERROR' | 'TRAIN' | 'SUCCESS' | 'DEBUG';
+    message: string;
+}
+
+export async function getLogs(since?: string, limit = 100): Promise<{ logs: LogEntry[]; count: number }> {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (since) params.set('since', since);
+    const response = await fetch(`${API_BASE_URL}/logs?${params}`);
+    if (!response.ok) throw new Error('Failed to fetch logs');
     return response.json();
 }

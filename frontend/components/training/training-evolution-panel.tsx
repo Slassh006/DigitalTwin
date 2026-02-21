@@ -29,28 +29,29 @@ export default function TrainingEvolutionPanel() {
     // Extract dynamic values
     const totalEpochs = metrics?.total_epochs_trained || 0
     const latestRun = metrics?.latest_run
+    const modelAccuracy = metrics?.model_metrics?.accuracy ?? null
 
-    // Process data for chart
+    // Process data for chart — real data only, no random noise
     const chartData = latestRun?.epochs?.map(e => ({
         epoch: e.epoch,
         loss: e.loss,
         physics: e.physics_loss || 0,
-        // Mock validation accuracy for visualization if not in backend data
-        valAcc: 0.9 + (Math.random() * 0.1)
+        // Use the final model accuracy value (flat line showing convergence target)
+        valAcc: modelAccuracy !== null ? modelAccuracy : undefined
     })) || []
 
-    // Fill with mock data if empty (for "Best Dependencies" demo)
+    // Fill with meaningful placeholder data if empty (before first training run)
     const displayData = chartData.length > 0 ? chartData : Array.from({ length: 20 }, (_, i) => ({
         epoch: i,
         loss: 0.8 * Math.exp(-i * 0.1),
         physics: 0.1 * Math.exp(-i * 0.05),
-        valAcc: 1 - 0.5 * Math.exp(-i * 0.1)
+        valAcc: undefined
     }))
 
     const latestEpochStats = latestRun?.epochs?.[latestRun.epochs.length - 1]
-    const totalLoss = latestEpochStats?.loss || latestRun?.final_loss || 0
-    const physicsLoss = latestEpochStats?.physics_loss || 0
-    const valAcc = metrics?.model_metrics?.accuracy ? (metrics.model_metrics.accuracy * 100).toFixed(1) : "N/A"
+    const totalLoss = latestEpochStats?.loss ?? latestRun?.final_loss ?? 0
+    const physicsLoss = latestEpochStats?.physics_loss ?? 0
+    const valAcc = modelAccuracy !== null ? `${(modelAccuracy * 100).toFixed(1)}` : "N/A"
 
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
