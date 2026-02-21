@@ -27,32 +27,29 @@ class EndometriosisDataset(Dataset):
         labels_path: Optional[str] = None,
         imaging_features_path: Optional[str] = None
     ):
-        DATA_PATH = os.getenv("DATA_PATH", "/app/data")
-        self.clinical_path = clinical_path or f"{DATA_PATH}/clinical/records.csv"
-        self.pathology_path = pathology_path or f"{DATA_PATH}/pathology/lab_reports.csv"
-        self.labels_path = labels_path or f"{DATA_PATH}/ground_truth.csv"
-        self.imaging_features_path = imaging_features_path
         """
         Initialize dataset from CSV files.
-        
+
         Args:
             clinical_path: Path to clinical records CSV
             pathology_path: Path to lab results CSV
             labels_path: Path to ground truth labels CSV
             imaging_features_path: Path to preprocessed imaging features CSV
         """
-        self.clinical_path = clinical_path
-        self.pathology_path = pathology_path
-        self.labels_path = labels_path
+        DATA_PATH = os.getenv("DATA_PATH", "/app/data")
+        self.clinical_path = clinical_path or f"{DATA_PATH}/clinical/records.csv"
+        self.pathology_path = pathology_path or f"{DATA_PATH}/pathology/lab_reports.csv"
+        self.labels_path = labels_path or f"{DATA_PATH}/ground_truth.csv"
         self.imaging_features_path = imaging_features_path
-        
+
         # Check if files exist, create samples if not
         self._ensure_data_exists()
+
         
         # Load dataframes
-        self.clinical_df = pd.read_csv(clinical_path)
-        self.pathology_df = pd.read_csv(pathology_path)
-        self.labels_df = pd.read_csv(labels_path)
+        self.clinical_df = pd.read_csv(self.clinical_path)
+        self.pathology_df = pd.read_csv(self.pathology_path)
+        self.labels_df = pd.read_csv(self.labels_path)
         
         # Load imaging features if available
         if imaging_features_path and os.path.exists(imaging_features_path):
