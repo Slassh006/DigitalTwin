@@ -65,7 +65,18 @@ prediction_count: int = 0  # Track number of predictions made
 total_epochs_trained: int = 0  # Track total training epochs
 
 
-# ==================== Pydantic Models ====================
+def classify_risk(prediction: float) -> str:
+    """Classify endometriosis risk level from prediction probability."""
+    if prediction >= 0.75:
+        return "HIGH"
+    elif prediction >= 0.5:
+        return "MODERATE"
+    elif prediction >= 0.25:
+        return "LOW"
+    else:
+        return "MINIMAL"
+
+
 
 class PredictRequest(BaseModel):
     patient_id: Optional[str] = None
