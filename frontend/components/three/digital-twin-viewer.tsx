@@ -46,22 +46,36 @@ export function DigitalTwinViewer({ stiffness, meshUrl, predictionData }: Digita
 
     const actualMeshUrl = meshUrl || "/models/uterus.glb";
 
-    // Lesion markers: use API lesions if available, otherwise derive from prediction probability
-    const allDefaultLesions: LesionData[] = [
-        { id: "L001", position: [-0.8, 0.6, 0.3], stiffness: 7.2, confidence: 0.85, severity: "high", label: "Left Ovary Lesion" },
-        { id: "L002", position: [0.6, 0.3, -0.2], stiffness: 3.8, confidence: 0.72, severity: "moderate", label: "Right Tube Adhesion" },
-        { id: "L003", position: [0.0, -0.4, 0.5], stiffness: 1.4, confidence: 0.91, severity: "low", label: "Cervical Region" },
+    // ── Lesion Positions (fixed anatomy, stiffness computed from real prediction) ──────────
+    const LESION_ANATOMY = [
+        { id: "L001", position: [-0.8, 0.6, 0.3] as [number, number, number], label: "Left Ovary Lesion", relStiff: 1.5 },
+        { id: "L002", position: [0.6, 0.3, -0.2] as [number, number, number], label: "Right Tube Adhesion", relStiff: 0.85 },
+        { id: "L003", position: [0.0, -0.4, 0.5] as [number, number, number], label: "Cervical Region", relStiff: 0.30 },
     ];
 
+    // When API returns lesions, use them directly.
+    // Otherwise derive stiffness & confidence from the real prediction result.
     const lesions: LesionData[] = predictionData?.lesions
         ? predictionData.lesions
         : predictionData
-            ? allDefaultLesions.slice(
-                0,
-                predictionData.prediction > 0.6 ? 3 :
-                    predictionData.prediction > 0.3 ? 2 : 1
-            )
-            : allDefaultLesions;
+            ? (() => {
+                const actualStiff = stiffness;          // kPa from /predict
+                const actualConf = predictionData.confidence;
+                const count = predictionData.prediction > 0.6 ? 3
+                    : predictionData.prediction > 0.3 ? 2 : 1;
+                return LESION_ANATOMY.slice(0, count).map(a => {
+                    const s = Math.max(0.3, Math.min(14.0, actualStiff * a.relStiff));
+                    const sev: 'low' | 'moderate' | 'high' = s >= 5 ? 'high' : s >= 2 ? 'moderate' : 'low';
+                    return {
+                        id: a.id, position: a.position, label: a.label,
+                        stiffness: s, confidence: actualConf, severity: sev
+                    };
+                });
+            })()
+            : LESION_ANATOMY.map(a => ({   // no prediction yet — marker positions only, callouts hidden by flag below
+                id: a.id, position: a.position, label: a.label,
+                stiffness: 3.0, confidence: 0.5, severity: 'moderate' as const
+            }));
 
     const handlePointerMove = useCallback((e: any) => {
         if (e?.point) {
@@ -131,7 +145,7 @@ export function DigitalTwinViewer({ stiffness, meshUrl, predictionData }: Digita
                         confidence={lesion.confidence}
                         severity={lesion.severity}
                         label={lesion.label}
-                        showCallout={calloutsEnabled}
+                        showCallout={false}
                     />
                 ))}
 
@@ -199,6 +213,63 @@ export function DigitalTwinViewer({ stiffness, meshUrl, predictionData }: Digita
                     CALLOUTS
                 </button>
             </div>
+
+            {/* ── Lesion Callout Cards — right edge, below toggle buttons, never blocks uterus ── */}
+            {predictionData && calloutsEnabled && lesions.length > 0 && (
+                <div
+                    className="absolute flex flex-col gap-1.5 z-20 pointer-events-none"
+                    style={{ top: '5.5rem', right: '0.75rem', width: '148px' }}
+                >
+                    {lesions.map((lesion) => {
+                        const c = lesion.severity === 'high' ? '#ff006e'
+                            : lesion.severity === 'moderate' ? '#ffc107'
+                                : '#39ff14';
+                        const riskScore = lesion.severity === 'high' ? Math.round(75 + lesion.confidence * 25)
+                            : lesion.severity === 'moderate' ? Math.round(40 + lesion.confidence * 30)
+                                : Math.round(10 + lesion.confidence * 25);
+                        return (
+                            <div key={lesion.id} style={{
+                                background: 'rgba(8,8,22,0.92)',
+                                border: `1px solid ${c}`,
+                                borderRadius: '6px',
+                                padding: '6px 9px',
+                                fontFamily: 'monospace',
+                                fontSize: '9px',
+                                color: '#e0f7ff',
+                                boxShadow: `0 0 10px ${c}30`,
+                                backdropFilter: 'blur(8px)',
+                            }}>
+                                {/* Label */}
+                                <div style={{
+                                    color: c, fontWeight: 'bold', fontSize: '9.5px', marginBottom: '4px',
+                                    borderBottom: `1px solid ${c}30`, paddingBottom: '3px'
+                                }}>
+                                    {lesion.label}
+                                </div>
+                                {/* Data rows */}
+                                {[
+                                    ['Stiffness', `${lesion.stiffness.toFixed(1)} kPa`],
+                                    ['Confidence', `${(lesion.confidence * 100).toFixed(0)}%`],
+                                    ['Risk Score', String(riskScore)],
+                                ].map(([k, v]) => (
+                                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1px' }}>
+                                        <span style={{ color: '#a0d9ff' }}>{k}</span>
+                                        <span style={{ fontWeight: 'bold', color: k === 'Risk Score' ? c : '#e0f7ff' }}>{v}</span>
+                                    </div>
+                                ))}
+                                {/* Severity badge */}
+                                <div style={{
+                                    marginTop: '4px', textAlign: 'center', color: c,
+                                    fontWeight: 'bold', fontSize: '8px', letterSpacing: '0.1em',
+                                    background: `${c}15`, borderRadius: '3px', padding: '1px 0'
+                                }}>
+                                    {lesion.severity.toUpperCase()} SEVERITY
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* Stiffness Legend */}
             <div className="absolute bottom-4 left-4 z-10">
