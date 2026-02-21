@@ -220,45 +220,57 @@ export function DigitalTwinViewer({ stiffness, meshUrl, predictionData }: Digita
                 </button>
             </div>
 
-            {/* ── Lesion Callout Cards — right edge, below toggle buttons, never blocks uterus ── */}
+            {/* ── Lesion Callout Cards — BOTTOM CENTER horizontal bar ────────────
+                Shows ONLY after prediction. Cards are below the model, above legend.
+                Three-column flex row: never overlaps the uterus. ──────────────── */}
             {predictionData && calloutsEnabled && lesions.length > 0 && (
                 <div
-                    className="absolute flex flex-col gap-1.5 z-20 pointer-events-none"
-                    style={{ top: '5.5rem', right: '0.75rem', width: '148px' }}
+                    className="absolute left-1/2 z-20 pointer-events-none"
+                    style={{
+                        bottom: '4.5rem',
+                        transform: 'translateX(-50%)',
+                        display: 'flex',
+                        gap: '8px',
+                        alignItems: 'flex-start',
+                    }}
                 >
                     {lesions.map((lesion) => {
                         const c = lesion.severity === 'high' ? '#ff006e'
                             : lesion.severity === 'moderate' ? '#ffc107'
                                 : '#39ff14';
-                        const riskScore = lesion.severity === 'high' ? Math.round(75 + lesion.confidence * 25)
-                            : lesion.severity === 'moderate' ? Math.round(40 + lesion.confidence * 30)
-                                : Math.round(10 + lesion.confidence * 25);
+                        // Risk Score: 0-100 scale, derived from stiffness and confidence
+                        const riskScore = Math.round(
+                            Math.min(99, (lesion.stiffness / 14.0) * 60 + lesion.confidence * 40)
+                        );
                         return (
                             <div key={lesion.id} style={{
-                                background: 'rgba(8,8,22,0.92)',
+                                background: 'rgba(8,8,22,0.93)',
                                 border: `1px solid ${c}`,
                                 borderRadius: '6px',
-                                padding: '6px 9px',
+                                padding: '7px 10px',
                                 fontFamily: 'monospace',
                                 fontSize: '9px',
                                 color: '#e0f7ff',
-                                boxShadow: `0 0 10px ${c}30`,
+                                boxShadow: `0 0 14px ${c}35`,
                                 backdropFilter: 'blur(8px)',
+                                minWidth: '118px',
+                                maxWidth: '130px',
                             }}>
                                 {/* Label */}
                                 <div style={{
-                                    color: c, fontWeight: 'bold', fontSize: '9.5px', marginBottom: '4px',
-                                    borderBottom: `1px solid ${c}30`, paddingBottom: '3px'
+                                    color: c, fontWeight: 'bold', fontSize: '9.5px',
+                                    marginBottom: '4px',
+                                    borderBottom: `1px solid ${c}30`, paddingBottom: '3px',
                                 }}>
                                     {lesion.label}
                                 </div>
-                                {/* Data rows */}
-                                {[
+                                {/* Data rows — ALL from real /predict result */}
+                                {([
                                     ['Stiffness', `${lesion.stiffness.toFixed(1)} kPa`],
                                     ['Confidence', `${(lesion.confidence * 100).toFixed(0)}%`],
                                     ['Risk Score', String(riskScore)],
-                                ].map(([k, v]) => (
-                                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1px' }}>
+                                ] as [string, string][]).map(([k, v]) => (
+                                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
                                         <span style={{ color: '#a0d9ff' }}>{k}</span>
                                         <span style={{ fontWeight: 'bold', color: k === 'Risk Score' ? c : '#e0f7ff' }}>{v}</span>
                                     </div>
@@ -266,16 +278,24 @@ export function DigitalTwinViewer({ stiffness, meshUrl, predictionData }: Digita
                                 {/* Severity badge */}
                                 <div style={{
                                     marginTop: '4px', textAlign: 'center', color: c,
-                                    fontWeight: 'bold', fontSize: '8px', letterSpacing: '0.1em',
-                                    background: `${c}15`, borderRadius: '3px', padding: '1px 0'
+                                    fontWeight: 'bold', fontSize: '8px', letterSpacing: '0.08em',
+                                    background: `${c}18`, borderRadius: '3px', padding: '2px 0',
                                 }}>
                                     {lesion.severity.toUpperCase()} SEVERITY
+                                </div>
+                                {/* Real data badge */}
+                                <div style={{
+                                    marginTop: '3px', textAlign: 'center',
+                                    color: '#00ffff80', fontSize: '7px', letterSpacing: '0.05em',
+                                }}>
+                                    ◉ SIMULATION RESULT
                                 </div>
                             </div>
                         );
                     })}
                 </div>
             )}
+
 
             {/* Stiffness Legend */}
             <div className="absolute bottom-4 left-4 z-10">

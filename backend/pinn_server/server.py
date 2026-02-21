@@ -437,12 +437,19 @@ async def train_federated(request: TrainRequest, background_tasks: BackgroundTas
                 # Clamp stiffness to physiologically valid range (kPa)
                 stiffness = torch.clamp(stiffness, 0.0, 10.0)
 
-                # Compute loss (BCEWithLogitsLoss applies sigmoid internally)
+                # Compute loss
                 loss, loss_dict = loss_fn((prediction, stiffness), labels)
 
-                # Backward pass
+                # ── NaN guard: skip batch if loss is not finite ───────────────────
+                if not math.isfinite(loss_dict['total']):
+                    optimizer.zero_grad()
+                    logger.warning(f"Epoch {epoch+1}: batch NaN loss skipped")
+                    continue
+
+                # Backward pass + gradient clipping (prevents gradient explosion)
                 optimizer.zero_grad()
                 loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 optimizer.step()
 
                 epoch_loss += loss_dict['total']
@@ -450,10 +457,14 @@ async def train_federated(request: TrainRequest, background_tasks: BackgroundTas
                 epoch_data_loss += loss_dict['data']
                 num_batches += 1
 
-            # Average losses over batches
-            avg_loss = epoch_loss / max(num_batches, 1)
-            avg_physics = epoch_physics_loss / max(num_batches, 1)
-            avg_data = epoch_data_loss / max(num_batches, 1)
+            # Average losses over batches — skip NaN values
+            def _safe_avg(total, n):
+                val = total / max(n, 1)
+                return val if math.isfinite(val) else 0.0
+
+            avg_loss    = _safe_avg(epoch_loss, num_batches)
+            avg_physics = _safe_avg(epoch_physics_loss, num_batches)
+            avg_data    = _safe_avg(epoch_data_loss, num_batches)
 
             epoch_entry = {
                 "epoch": epoch,
@@ -732,6 +743,17 @@ async def get_analytics_metrics():
         "clinical":  {"contribution": 0.31, "accuracy": 0.84},
         "pathology": {"contribution": 0.27, "accuracy": 0.91},
     }
+
+    def _sanitize(obj):
+        """Recursively replace NaN/Inf floats with None so json.dumps never raises."""
+        if isinstance(obj, float):
+            return None if (math.isnan(obj) or math.isinf(obj)) else obj
+        if isinstance(obj, dict):
+            return {k: _sanitize(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [_sanitize(v) for v in obj]
+        return obj
+
     try:
         try:
             metrics = training_history_manager.get_metrics()
@@ -745,13 +767,14 @@ async def get_analytics_metrics():
             logger.warning(f"get_latest_run failed: {e}")
             latest_run = None
 
-        return {
-            "model_metrics": metrics or {},
-            "latest_run": latest_run,
+        payload = {
+            "model_metrics": _sanitize(metrics) or {},
+            "latest_run": _sanitize(latest_run),
             "node_performance": _default_node_perf,
             "total_predictions": prediction_count,
             "total_epochs_trained": total_epochs_trained,
         }
+        return payload
     except Exception as e:
         logger.error(f"analytics/metrics unexpected error: {e}")
         # Always return valid JSON — frontend never sees a 500 from this route

@@ -104,10 +104,15 @@ class PINNLoss(nn.Module):
             Total loss and dictionary of individual loss components
         """
         prediction, stiffness = pred_output
-        
-        # Data loss (binary cross-entropy with logits — sigmoid applied internally)
-        bce = nn.BCEWithLogitsLoss()
-        data_loss = bce(prediction, target_labels.float())
+
+        # ── Data loss ────────────────────────────────────────────────────────
+        # IMPORTANT: the model's prediction_head already applies nn.Sigmoid(),
+        # so we must use BCELoss (NOT BCEWithLogitsLoss which would double-apply
+        # sigmoid and produce saturated 0/1 → log(0) = -inf → NaN everywhere).
+        EPS = 1e-7
+        pred_clamped = torch.clamp(prediction, EPS, 1.0 - EPS)
+        bce = nn.BCELoss()
+        data_loss = bce(pred_clamped, target_labels.float())
         
         # If we have ground truth stiffness, use MSE
         if target_stiffness is not None:
