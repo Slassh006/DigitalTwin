@@ -286,7 +286,13 @@ async def predict(request: PredictRequest):
         pred_value = float(prediction.squeeze().cpu().numpy())
         stiff_value = float(stiffness.squeeze().cpu().numpy())
         conf_value = float(confidence.squeeze().cpu().numpy())
-        
+
+        # Sanitize NaN / Inf values (can occur with untrained or early-epoch models)
+        import math
+        pred_value  = 0.5  if not math.isfinite(pred_value)  else max(0.0, min(1.0, pred_value))
+        stiff_value = 3.0  if not math.isfinite(stiff_value) else max(0.0, min(15.0, stiff_value))
+        conf_value  = 0.5  if not math.isfinite(conf_value)  else max(0.0, min(1.0, conf_value))
+
         risk = classify_risk(pred_value)
         
         logger.info(f"Prediction: {pred_value:.3f}, Stiffness: {stiff_value:.2f} kPa, Risk: {risk}")
