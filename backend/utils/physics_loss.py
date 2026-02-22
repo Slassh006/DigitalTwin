@@ -107,10 +107,10 @@ class PINNLoss(nn.Module):
 
         # ── Data loss ────────────────────────────────────────────────────────
         # IMPORTANT: the model's prediction_head already applies nn.Sigmoid(),
-        # so we must use BCELoss (NOT BCEWithLogitsLoss which would double-apply
-        # sigmoid and produce saturated 0/1 → log(0) = -inf → NaN everywhere).
+        # so we must use BCELoss. However, precision errors can cause values
+        # to escape [0, 1]. We must clamp them strictly.
         EPS = 1e-7
-        pred_clamped = torch.clamp(prediction, EPS, 1.0 - EPS)
+        pred_clamped = torch.clamp(prediction, min=EPS, max=1.0 - EPS)
         bce = nn.BCELoss()
         data_loss = bce(pred_clamped, target_labels.float())
         
