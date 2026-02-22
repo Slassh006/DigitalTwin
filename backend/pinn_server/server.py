@@ -13,8 +13,10 @@ from typing import List, Optional, Dict
 from datetime import datetime
 import numpy as np
 import torch
+import json
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse as _BaseJSONResponse
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import httpx
@@ -81,10 +83,41 @@ _buf_handler = _LogBufferHandler()
 _buf_handler.setLevel(logging.DEBUG)
 logging.getLogger().addHandler(_buf_handler)
 
+# ==================== Safe JSON (handles NaN / Inf) ====================
+
+class _SafeEncoder(json.JSONEncoder):
+    """JSON encoder that replaces NaN/Inf with null instead of crashing."""
+    def iterencode(self, o, _one_shot=False):
+        # Walk the object tree and replace non-finite floats with None
+        def _sanitize(obj):
+            if isinstance(obj, float):
+                if obj != obj or obj == float('inf') or obj == float('-inf'):
+                    return None
+                return obj
+            if isinstance(obj, dict):
+                return {k: _sanitize(v) for k, v in obj.items()}
+            if isinstance(obj, (list, tuple)):
+                return [_sanitize(v) for v in obj]
+            return obj
+        return super().iterencode(_sanitize(o), _one_shot)
+
+
+class SafeJSONResponse(_BaseJSONResponse):
+    """Drop-in JSONResponse that serialises NaN/Inf as JSON null."""
+    def render(self, content) -> bytes:
+        return json.dumps(
+            content,
+            cls=_SafeEncoder,
+            ensure_ascii=False,
+            allow_nan=False,
+        ).encode("utf-8")
+
+
 app = FastAPI(
     title="PINN Central Server",
     description="Physics-Informed Neural Network aggregator for federated learning",
-    version="1.0.0"
+    version="1.0.0",
+    default_response_class=SafeJSONResponse,
 )
 
 app.add_middleware(
