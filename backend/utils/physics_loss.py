@@ -111,8 +111,12 @@ class PINNLoss(nn.Module):
         # to escape [0, 1]. We must clamp them strictly.
         EPS = 1e-7
         pred_clamped = torch.clamp(prediction, min=EPS, max=1.0 - EPS)
+        
+        # Labels MUST be exactly in [0, 1] for BCELoss
+        target_clamped = torch.clamp(target_labels.float(), min=0.0, max=1.0)
+        
         bce = nn.BCELoss()
-        data_loss = bce(pred_clamped, target_labels.float())
+        data_loss = bce(pred_clamped, target_clamped)
         
         # If we have ground truth stiffness, use MSE
         if target_stiffness is not None:
