@@ -208,7 +208,14 @@ class EndometriosisDataset(Dataset):
             for col in ['has_endometriosis', 'label', 'endometriosis', 'target']:
                 col_name = next((c for c in self.labels_df.columns if c.lower() == col), None)
                 if col_name and not pd.isna(row[col_name]):
-                    label_val = float(row[col_name])
+                    val = row[col_name]
+                    # Robust boolean parsing
+                    if isinstance(val, (int, float)):
+                        label_val = 1.0 if val > 0.5 else 0.0
+                    elif isinstance(val, str):
+                        label_val = 1.0 if val.lower().strip() in ['1', 'true', 'yes', 'y', 'positive'] else 0.0
+                    else:
+                        label_val = 1.0 if bool(val) else 0.0
                     break
         
         label = torch.tensor([label_val], dtype=torch.float32)

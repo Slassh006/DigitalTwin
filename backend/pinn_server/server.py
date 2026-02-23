@@ -465,10 +465,15 @@ async def train_federated(request: TrainRequest, background_tasks: BackgroundTas
                 pathology_batch = batch['pathology'].to(device)
                 labels = batch['labels'].to(device)
 
+                # ── NaN guard: skip batch if inputs are NaNs ───────
+                if not (torch.isfinite(imaging_batch).all() and torch.isfinite(clinical_batch).all() and torch.isfinite(pathology_batch).all()):
+                    logger.warning(f"Epoch {epoch+1}: Input batch contains NaNs. Skipping batch.")
+                    continue
+
                 # Forward pass
                 prediction, stiffness = model(imaging_batch, clinical_batch, pathology_batch)
 
-                # ── NaN guard: skip batch if inputs or outputs contain NaNs ───────
+                # ── NaN guard: skip batch if outputs contain NaNs ───────
                 if not (torch.isfinite(prediction).all() and torch.isfinite(stiffness).all()):
                     optimizer.zero_grad()
                     logger.warning(f"Epoch {epoch+1}: Model produced NaN/Inf. Skipping batch.")
@@ -476,6 +481,11 @@ async def train_federated(request: TrainRequest, background_tasks: BackgroundTas
 
                 # Clamp stiffness to physiologically valid range (kPa)
                 stiffness = torch.clamp(stiffness, 0.0, 10.0)
+
+                # ── NaN guard: skip batch if target labels are NaNs ───────
+                if not torch.isfinite(labels).all():
+                    logger.warning(f"Epoch {epoch+1}: Target labels contain NaNs. Skipping batch.")
+                    continue
 
                 # Compute loss
                 loss, loss_dict = loss_fn((prediction, stiffness), labels)
