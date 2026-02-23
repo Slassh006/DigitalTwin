@@ -72,14 +72,14 @@ void main() {
 
         // Blend: stronger at face centres, subtle at edges
         float faceFactor = pow(1.0 - fresnel, 1.5);
-        hologramColor = mix(hologramColor, heatColor * 1.25, faceFactor * 0.8);
+        hologramColor = mix(hologramColor, heatColor * 0.85, faceFactor * 0.55);
 
-        // Boost edge glow with heatmap tint
-        hologramColor += heatColor * fresnel * 0.6;
+        // Subtle edge glow with heatmap tint (reduced to avoid Bloom halos)
+        hologramColor += heatColor * fresnel * 0.25;
     }
 
-    // --- Displacement highlight ---
-    hologramColor += abs(vDisplacement) * uColor * 8.0;
+    // --- Displacement highlight (kept low to avoid Bloom blow-out) ---
+    hologramColor += abs(vDisplacement) * uColor * 1.5;
 
     // --- Alpha compositing ---
     float alpha = uOpacity * (0.6 + fresnel * 0.4);
