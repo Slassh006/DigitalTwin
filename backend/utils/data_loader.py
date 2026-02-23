@@ -57,6 +57,23 @@ class EndometriosisDataset(Dataset):
         else:
             logger.warning(f"Imaging features not found at {imaging_features_path}. Will use synthetic features.")
             self.imaging_df = None
+            
+        # ── Normalize Patient IDs ───────────────────────────────────────
+        for df_tuple in [(self.clinical_df, "clinical"), (self.pathology_df, "pathology"), (self.labels_df, "labels"), (self.imaging_df, "imaging")]:
+            df, name = df_tuple
+            if df is not None:
+                # Find ID column
+                id_col = next((c for c in df.columns if str(c).lower().strip() in ['patient_id', 'id', 'patient', 'record_id', 'subject_id']), None)
+                if id_col:
+                    df.rename(columns={id_col: 'patient_id'}, inplace=True)
+                else:
+                    # Fallback to index if no ID column found
+                    logger.warning(f"No patient ID column found in {name} dataset. Using row indices instead.")
+                    df['patient_id'] = df.index.astype(str)
+                
+                # Strip string, remove decimals for ints stored as floats ("1.0" -> "1")
+                df['patient_id'] = df['patient_id'].astype(str).str.strip()
+                df['patient_id'] = df['patient_id'].apply(lambda x: x.split('.')[0] if x.endswith('.0') else x)
         
         # Get valid patient IDs (intersection of all datasets)
         self.patient_ids = self._get_valid_patients()
