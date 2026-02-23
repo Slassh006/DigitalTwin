@@ -125,54 +125,93 @@ class EndometriosisDataset(Dataset):
     def __len__(self) -> int:
         return len(self.patient_ids)
     
+    def _getitem_from_df(self, df: pd.DataFrame, patient_id: str, field_map: Dict[str, float], default_val: float = 0.0) -> torch.Tensor:
+        """Robustly extract features from a dataframe row."""
+        try:
+            # Case-insensitive column search
+            matches = df[df['patient_id'].astype(str) == patient_id]
+            if matches.empty:
+                return torch.tensor(list(field_map.values()), dtype=torch.float32)
+            
+            row = matches.iloc[0]
+            features = []
+            
+            # Helper to find column regardless of case
+            cols_lower = {c.lower(): c for c in df.columns}
+            
+            for field, scale in field_map.items():
+                col_name = cols_lower.get(field.lower())
+                if col_name and not pd.isna(row[col_name]):
+                    features.append(float(row[col_name]) / scale)
+                else:
+                    features.append(default_val)
+                    
+            return torch.tensor(features, dtype=torch.float32)
+        except Exception as e:
+            logger.warning(f"Error extracting features for {patient_id}: {e}")
+            return torch.tensor(list(field_map.values()), dtype=torch.float32)
+
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
         patient_id = self.patient_ids[idx]
         
-        # Get clinical features
-        clinical_row = self.clinical_df[self.clinical_df['patient_id'].astype(str) == patient_id].iloc[0]
-        # Map actual real dataset headers
-        clinical_features = torch.tensor([
-            float(clinical_row.get('Age', 30)) / 60.0,
-            float(clinical_row.get('Depression_Score', 0)) / 21.0,
-            float(clinical_row.get('Anxiety_Score', 0)) / 21.0,
-            float(clinical_row.get('Stress_Score', 0)) / 21.0,
-            float(clinical_row.get('Q15_1', 0)) / 4.0,
-            float(clinical_row.get('Q17_1', 0)) / 4.0,
-        ], dtype=torch.float32)
-        
-        # Pad to expected dimension (64)
+        # 1. Clinical Features (Case-insensitive matching)
+        clinical_map = {
+            'age': 60.0,
+            'depression_score': 21.0,
+            'anxiety_score': 21.0,
+            'stress_score': 21.0,
+            'pain_score': 10.0,
+            'bmi': 40.0
+        }
+        clinical_features = self._getitem_from_df(self.clinical_df, patient_id, clinical_map)
         clinical_features = torch.nn.functional.pad(clinical_features, (0, 64 - len(clinical_features)))
         
-        # Get pathology features
-        pathology_row = self.pathology_df[self.pathology_df['patient_id'].astype(str) == patient_id].iloc[0]
-        pathology_features = torch.tensor([
-            float(pathology_row.get('Age(years)', 30)) / 60.0,
-            float(pathology_row.get('WBC(G/L)', 7.5)) / 15.0,
-            float(pathology_row.get('HGB(g/L)', 135)) / 200.0,
-            float(pathology_row.get('NLR', 2.0)) / 5.0,
-            float(pathology_row.get('PLT*(G/L)', 250)) / 500.0,
-        ], dtype=torch.float32)
-        
-        # Pad to expected dimension (64)
+        # 2. Pathology Features
+        pathology_map = {
+            'age': 60.0,
+            'wbc': 15.0,
+            'hgb': 200.0,
+            'nlr': 5.0,
+            'plt': 500.0,
+            'ca125': 100.0
+        }
+        pathology_features = self._getitem_from_df(self.pathology_df, patient_id, pathology_map)
         pathology_features = torch.nn.functional.pad(pathology_features, (0, 64 - len(pathology_features)))
         
-        # Get imaging features
+        # 3. Imaging Features
         if self.imaging_df is not None:
-            imaging_row = self.imaging_df[self.imaging_df['patient_id'].astype(str) == patient_id].iloc[0]
-            # Assuming imaging features are stored as multiple columns
-            imaging_cols = [col for col in self.imaging_df.columns if col.startswith('feature_')]
-            imaging_features = torch.tensor([float(imaging_row[col]) for col in imaging_cols], dtype=torch.float32)
-            # Pad to expected dimension (128)
-            imaging_features = torch.nn.functional.pad(imaging_features, (0, 128 - len(imaging_features)))
+            matches = self.imaging_df[self.imaging_df['patient_id'].astype(str) == patient_id]
+            if not matches.empty:
+                imaging_row = matches.iloc[0]
+                feature_cols = [c for c in self.imaging_df.columns if c.lower().startswith('feature_')]
+                # Fill NaN with 0.0
+                imaging_features = torch.tensor([
+                    float(imaging_row[c]) if not pd.isna(imaging_row[c]) else 0.0 
+                    for c in feature_cols
+                ], dtype=torch.float32)
+                imaging_features = torch.nn.functional.pad(imaging_features, (0, 128 - len(imaging_features)))
+            else:
+                imaging_features = torch.zeros(128, dtype=torch.float32)
         else:
-            # Generate synthetic imaging features based on patient data
-            # In production, this should come from actual MRI processing
-            np.random.seed(int(patient_id))
-            imaging_features = torch.tensor(np.random.randn(128), dtype=torch.float32)
+            # Fallback to deterministic pseudo-random features
+            import hashlib
+            h = int(hashlib.md5(patient_id.encode()).hexdigest(), 16)
+            torch.manual_seed(h % 10000)
+            imaging_features = torch.randn(128)
         
-        # Get label
-        label_row = self.labels_df[self.labels_df['patient_id'].astype(str) == patient_id].iloc[0]
-        label = torch.tensor([float(label_row['has_endometriosis'])], dtype=torch.float32)
+        # 4. Label (Handle has_endometriosis vs label vs endometriosis)
+        label_val = 0.0
+        label_matches = self.labels_df[self.labels_df['patient_id'].astype(str) == patient_id]
+        if not label_matches.empty:
+            row = label_matches.iloc[0]
+            # Try common label column names
+            for col in ['has_endometriosis', 'label', 'endometriosis', 'target']:
+                col_name = next((c for c in self.labels_df.columns if c.lower() == col), None)
+                if col_name and not pd.isna(row[col_name]):
+                    label_val = float(row[col_name])
+                    break
+        
+        label = torch.tensor([label_val], dtype=torch.float32)
         
         return {
             'imaging': imaging_features,

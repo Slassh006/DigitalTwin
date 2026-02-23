@@ -467,16 +467,21 @@ async def train_federated(request: TrainRequest, background_tasks: BackgroundTas
                 # Forward pass
                 prediction, stiffness = model(imaging_batch, clinical_batch, pathology_batch)
 
+                # ── NaN guard: skip batch if inputs or outputs contain NaNs ───────
+                if not (torch.isfinite(prediction).all() and torch.isfinite(stiffness).all()):
+                    optimizer.zero_grad()
+                    logger.warning(f"Epoch {epoch+1}: Model produced NaN/Inf. Skipping batch.")
+                    continue
+
                 # Clamp stiffness to physiologically valid range (kPa)
                 stiffness = torch.clamp(stiffness, 0.0, 10.0)
 
                 # Compute loss
                 loss, loss_dict = loss_fn((prediction, stiffness), labels)
 
-                # ── NaN guard: skip batch if loss is not finite ───────────────────
                 if not math.isfinite(loss_dict['total']):
                     optimizer.zero_grad()
-                    logger.warning(f"Epoch {epoch+1}: batch NaN loss skipped")
+                    logger.warning(f"Epoch {epoch+1}: Loss produced NaN ({loss_dict}). Skipping batch.")
                     continue
 
                 # Backward pass + gradient clipping (prevents gradient explosion)
