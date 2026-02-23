@@ -427,6 +427,7 @@ async def train_federated(request: TrainRequest, background_tasks: BackgroundTas
         raise HTTPException(status_code=503, detail="Model not initialized")
     
     is_training = True
+    import math
     
     try:
         # 1. Trigger training on all federated nodes
@@ -528,7 +529,6 @@ async def train_federated(request: TrainRequest, background_tasks: BackgroundTas
 
         # Compute and persist model accuracy from loss (proxy metric)
         # Accuracy estimate: e^(-loss) gives reasonable 0-1 range
-        import math
         estimated_accuracy = round(math.exp(-final_loss), 4) if final_loss < 10 else 0.01
         training_history_manager.update_metrics({
             "accuracy": estimated_accuracy,
