@@ -19,13 +19,12 @@ class EndoPINN(nn.Module):
     Physics-Informed Neural Network for Endometriosis prediction.
     
     Architecture:
-    - Input: Concatenated features from 3 modalities (imaging + clinical + pathology)
-    - Hidden layers with dropout for regularization
-    - Dual output heads: prediction probability + tissue stiffness
+    - Input: Concatenated features from 3 modalities (imaging + clinical + pathology) + Spatial Coordinates (B, 3)
+    - Hidden layers with dropout for regularization (kept enabled during eval for Monte Carlo Dropout)
+    - Triple output heads: prediction probability, tissue stiffness, and 3D spatial displacement
     
     Physics Constraints:
-    - Healthy tissue: Stiffness < 2 kPa
-    - Endometriotic lesions: Stiffness > 5 kPa
+    - Navier-Cauchy static equilibrium enforced on displacement using predicted stiffness
     """
     
     def __init__(
@@ -33,6 +32,7 @@ class EndoPINN(nn.Module):
         imaging_dim: int = 128,
         clinical_dim: int = 64,
         pathology_dim: int = 64,
+        spatial_dim: int = 3,
         hidden_dims: list = [256, 128, 64],
         dropout: float = 0.3
     ):
@@ -41,17 +41,20 @@ class EndoPINN(nn.Module):
             imaging_dim: Dimension of imaging features
             clinical_dim: Dimension of clinical features
             pathology_dim: Dimension of pathology features
+            spatial_dim: Dimension of spatial coordinates (x,y,z)
             hidden_dims: List of hidden layer dimensions
-            dropout: Dropout probability
+            dropout: Dropout probability (used for MC Dropout)
         """
         super().__init__()
         
         self.imaging_dim = imaging_dim
         self.clinical_dim = clinical_dim
         self.pathology_dim = pathology_dim
+        self.spatial_dim = spatial_dim
+        self.dropout_prob = dropout
         
         # Total input dimension
-        input_dim = imaging_dim + clinical_dim + pathology_dim
+        input_dim = imaging_dim + clinical_dim + pathology_dim + spatial_dim
         
         # Feature fusion layer
         self.fusion = nn.Linear(input_dim, hidden_dims[0])
@@ -83,7 +86,7 @@ class EndoPINN(nn.Module):
             nn.Sigmoid()  # Output probability
         )
         
-        # Head 2: Tissue stiffness (kPa)
+        # Head 2: Tissue stiffness E (kPa)
         self.stiffness_head = nn.Sequential(
             nn.Linear(final_dim, 32),
             nn.ReLU(),
@@ -91,6 +94,15 @@ class EndoPINN(nn.Module):
             nn.Linear(32, 1),
             nn.Softplus()  # Ensure positive values
         )
+        
+        # Head 3: Spatial displacement vector u = (u_x, u_y, u_z) needed for Navier-Cauchy
+        self.displacement_head = nn.Sequential(
+            nn.Linear(final_dim, 32),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(32, 3) # Output 3D vector
+        )
+
         
         # Initialize weights
         self._initialize_weights()
@@ -109,8 +121,9 @@ class EndoPINN(nn.Module):
         self,
         imaging_features: torch.Tensor,
         clinical_features: torch.Tensor,
-        pathology_features: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        pathology_features: torch.Tensor,
+        spatial_coords: Optional[torch.Tensor] = None
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Forward pass.
         
@@ -118,13 +131,20 @@ class EndoPINN(nn.Module):
             imaging_features: (batch_size, imaging_dim)
             clinical_features: (batch_size, clinical_dim)
             pathology_features: (batch_size, pathology_dim)
+            spatial_coords: (batch_size, 3) 3D coordinate inputs. Extracted if absent.
             
         Returns:
             prediction: (batch_size, 1) - Endometriosis probability
             stiffness: (batch_size, 1) - Tissue stiffness in kPa
+            displacement: (batch_size, 3) - Tissue displacement vector
         """
+        if spatial_coords is None:
+            spatial_coords = torch.zeros((imaging_features.size(0), self.spatial_dim), device=imaging_features.device)
+            # Ensure coordinates have requires_grad for Navier-Cauchy
+        spatial_coords.requires_grad_(True)
+            
         # Concatenate all features
-        x = torch.cat([imaging_features, clinical_features, pathology_features], dim=1)
+        x = torch.cat([imaging_features, clinical_features, pathology_features, spatial_coords], dim=1)
         
         # Fusion layer
         x = self.fusion(x)
@@ -144,18 +164,73 @@ class EndoPINN(nn.Module):
         # Output heads
         prediction = self.prediction_head(x)
         stiffness = self.stiffness_head(x)
+        displacement = self.displacement_head(x)
         
         # Scale stiffness to reasonable range (0-15 kPa)
         stiffness = stiffness * 15.0
         
-        return prediction, stiffness
+        return prediction, stiffness, displacement
     
+    def enable_mc_dropout(self):
+        """Force dropout layers active during evaluation for Monte Carlo Uncertainty."""
+        for m in self.modules():
+            if m.__class__.__name__.startswith('Dropout'):
+                m.train()
+                
     def predict_with_confidence(
         self,
         imaging_features: torch.Tensor,
         clinical_features: torch.Tensor,
-        pathology_features: torch.Tensor
+        pathology_features: torch.Tensor,
+        spatial_coords: Optional[torch.Tensor] = None,
+        mc_samples: int = 10
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Make prediction with rigorous Monte Carlo Dropout uncertainty quantification.
+        
+        Returns:
+            prediction: Mean Endometriosis probability (0-1)
+            stiffness: Mean Tissue stiffness
+            confidence: Confidence score (1 - normalized variance)
+        """
+        # Enable MC Dropout explicitly
+        self.eval()
+        self.enable_mc_dropout()
+        
+        predictions = []
+        stiffnesses = []
+        
+        with torch.no_grad():
+            from torch.utils._pytree import tree_map # For older torch ignore gradient requirement, but MC Dropout evaluates
+            # Actually, standard forward pass with dropout requires inference mode off or standard no_grad
+            # Since MC Dropout is active, dropout will inject variance into forward passes.
+            for _ in range(mc_samples):
+                pred, stiff, _ = self.forward(
+                    imaging_features, clinical_features, pathology_features, spatial_coords
+                )
+                predictions.append(pred)
+                stiffnesses.append(stiff)
+        
+        # Stack and calculate statistics
+        predictions = torch.stack(predictions)
+        stiffnesses = torch.stack(stiffnesses)
+        
+        mean_prediction = predictions.mean(dim=0)
+        mean_stiffness = stiffnesses.mean(dim=0)
+        
+        # Variance as uncertainty
+        stiffness_variance = stiffnesses.var(dim=0)
+        
+        # Confidence is inversely proportional to variance. 
+        # Standard deviation of +/- 2 kPa gives near 0% confidence.
+        # std = sqrt(var). If std == 0, conf = 1.0. If std >= 2.0, conf = 0.0
+        std = torch.sqrt(stiffness_variance)
+        confidence = 1.0 - torch.clamp(std / 2.0, 0.0, 1.0)
+        
+        # Return model to normal eval mode (disable dropout)
+        self.eval()
+        
+        return mean_prediction, mean_stiffness, confidence.unsqueeze(-1) if confidence.dim() == 1 else confidence
         """
         Make prediction with confidence score.
         
@@ -207,7 +282,8 @@ class EnsemblePINN(nn.Module):
         self,
         imaging_features: torch.Tensor,
         clinical_features: torch.Tensor,
-        pathology_features: torch.Tensor
+        pathology_features: torch.Tensor,
+        spatial_coords: Optional[torch.Tensor] = None
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Forward pass through ensemble.
@@ -221,7 +297,7 @@ class EnsemblePINN(nn.Module):
         stiffnesses = []
         
         for model in self.models:
-            pred, stiff = model(imaging_features, clinical_features, pathology_features)
+            pred, stiff, _ = model(imaging_features, clinical_features, pathology_features, spatial_coords)
             predictions.append(pred)
             stiffnesses.append(stiff)
         

@@ -15,6 +15,17 @@ const nextConfig = {
             type: 'asset/source',
         });
 
+        // VTK.js Worker Loader setup
+        config.module.rules.push({
+            test: /\.worker\.(js|ts)$/,
+            use: [
+                {
+                    loader: 'worker-loader',
+                    options: { inline: 'no-fallback' }
+                }
+            ]
+        });
+
         return config;
     },
 }

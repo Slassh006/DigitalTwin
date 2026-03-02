@@ -48,7 +48,7 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -97,20 +97,22 @@ def load_mri_data(patient_id: str) -> np.ndarray:
     filepath = Path(DATA_PATH) / f"patient_{patient_id}.nii"
     
     # Check for jpg (Glenda frames format: c_XXX_v_(video_XXX.mp4)_f_XXX.jpg)
-    # We'll just grab any jpg if exact patient matching is hard, or mock it.
-    jpg_files = list(Path(DATA_PATH).glob("*.jpg"))
+    # We'll traverse the directories for safety.
+    jpg_files = list(Path(DATA_PATH).rglob("*.jpg")) + list(Path(DATA_PATH).rglob("*.jpeg"))
     if jpg_files:
         # Just use the first one available or match randomly for the simulation
-        target_file = jpg_files[int(patient_id) % len(jpg_files)] if patient_id.isdigit() else jpg_files[0]
+        target_file = jpg_files[hash(str(patient_id)) % len(jpg_files)]
         logger.info(f"Loading real Endoscopic Image data from {target_file}")
         
-        # Load the image simulating data_loaders (we'll implement load_image_file in utils if needed, or fallback here)
+        # Load the image simulating data_loaders
         try:
              import cv2
              img = cv2.imread(str(target_file), cv2.IMREAD_GRAYSCALE)
              if img is not None:
                  img = cv2.resize(img, (128, 128))
                  return normalize_volume(img)
+             else:
+                 raise ValueError("CV2 read none")
         except Exception as e:
              logger.warning(f"CV2 load failed: {e}. Generating mock data.")
     elif filepath.exists():

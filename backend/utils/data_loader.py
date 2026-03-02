@@ -65,15 +65,19 @@ class EndometriosisDataset(Dataset):
                 # Find ID column
                 id_col = next((c for c in df.columns if str(c).lower().strip() in ['patient_id', 'id', 'patient', 'record_id', 'subject_id']), None)
                 if id_col:
-                    df.rename(columns={id_col: 'patient_id'}, inplace=True)
+                    s = df[id_col]
+                    if isinstance(s, pd.DataFrame):
+                        s = s.iloc[:, 0]
+                    df['patient_id_norm'] = s
                 else:
                     # Fallback to index if no ID column found
                     logger.warning(f"No patient ID column found in {name} dataset. Using row indices instead.")
-                    df['patient_id'] = df.index.astype(str)
+                    df['patient_id_norm'] = df.index.astype(str)
                 
                 # Strip string, remove decimals for ints stored as floats ("1.0" -> "1")
-                df['patient_id'] = df['patient_id'].astype(str).str.strip()
-                df['patient_id'] = df['patient_id'].apply(lambda x: x.split('.')[0] if x.endswith('.0') else x)
+                # We use a completely new column 'patient_id_norm' to avoid any dataframe conflicts
+                s = df['patient_id_norm'].astype(str).str.strip()
+                df['patient_id'] = s.apply(lambda x: x.split('.')[0] if x.endswith('.0') else x)
         
         # Get valid patient IDs (intersection of all datasets)
         self.patient_ids = self._get_valid_patients()
@@ -181,8 +185,12 @@ class EndometriosisDataset(Dataset):
             'bmi': 40.0
         }
         clinical_features = self._getitem_from_df(self.clinical_df, patient_id, clinical_map)
-        clinical_features = torch.nn.functional.pad(clinical_features, (0, 64 - len(clinical_features)))
-        
+        pad_amount = max(0, 64 - len(clinical_features))
+        if pad_amount > 0:
+            clinical_features = torch.nn.functional.pad(clinical_features, (0, pad_amount))
+        else:
+            clinical_features = clinical_features[:64]
+            
         # 2. Pathology Features
         pathology_map = {
             'age': 60.0,
@@ -193,7 +201,11 @@ class EndometriosisDataset(Dataset):
             'ca125': 100.0
         }
         pathology_features = self._getitem_from_df(self.pathology_df, patient_id, pathology_map)
-        pathology_features = torch.nn.functional.pad(pathology_features, (0, 64 - len(pathology_features)))
+        pad_amount = max(0, 64 - len(pathology_features))
+        if pad_amount > 0:
+            pathology_features = torch.nn.functional.pad(pathology_features, (0, pad_amount))
+        else:
+            pathology_features = pathology_features[:64]
         
         # 3. Imaging Features
         if self.imaging_df is not None:
@@ -206,7 +218,12 @@ class EndometriosisDataset(Dataset):
                     float(imaging_row[c]) if not pd.isna(imaging_row[c]) else 0.0 
                     for c in feature_cols
                 ], dtype=torch.float32)
-                imaging_features = torch.nn.functional.pad(imaging_features, (0, 128 - len(imaging_features)))
+                
+                pad_amount = max(0, 128 - len(imaging_features))
+                if pad_amount > 0:
+                    imaging_features = torch.nn.functional.pad(imaging_features, (0, pad_amount))
+                else:
+                    imaging_features = imaging_features[:128]
             else:
                 imaging_features = torch.zeros(128, dtype=torch.float32)
         else:

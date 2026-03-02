@@ -1,0 +1,86 @@
+================================================================================
+                    ENDOTWIN V2.0 - FULL SYSTEM ARCHITECTURE FLOW
+================================================================================
+
+This document breaks down the full-stack flow of the Physics-Informed Neural Network 
+(PINN) Digital Twin application, specifically analyzing the UI/UX, patient data 
+upload mechanisms, real-time 3D symptom visualization, and the federated training pipeline.
+
+
+--------------------------------------------------------------------------------
+1. PATIENT REPORT UPLOAD MECHANISM (FRONTEND UI/UX)
+--------------------------------------------------------------------------------
+HOW IT WORKS:
+Instead of a raw file upload, the application features an interactive Clinical Data Interface.
+Component: `frontend/components/patient-input-form.tsx` and `lib/patient-encoder.ts`
+
+- Categorized Input Tabs: The user inputs patient telemetry across three distinct categories:
+  1. Imaging (Lesion Count, Max Size, Endometrial Thickness, rASRM Adhesion Score, Ultrasounds)
+  2. Clinical (Age, BMI, Pain VAS, Dysmenorrhea Severity, Cycle Length, Symptoms)
+  3. Pathology (CRP, IL-6, Neutrophils, Estradiol, CA-125, Post-Biopsy markers)
+  
+- Vector Encoding: Once "Run Prediction" is clicked, `PatientEncoder` converts these 
+  25+ human-readable sliders/toggles into three normalized mathematical feature vectors 
+  (Imaging 128d, Clinical 64d, Pathology 64d) suitable for neural network ingestion.
+
+- REST Submission: The encoded vectors are sent via HTTP POST to the FastAPI backend 
+  (`POST /predict`), triggering the PINN inference engine.
+
+
+--------------------------------------------------------------------------------
+2. REAL-TIME SYMPTOM VISUALIZATION (VTK.js)
+--------------------------------------------------------------------------------
+HOW IT WORKS:
+The application renders physical tissue symptoms directly onto a 3D uterus model 
+using VTK.js by volume rendering stiffness density fields from the backend.
+Component: `frontend/components/visualization/vtk-volume-viewer.tsx`
+
+- REST Polling: The UI polls the metrics (`getAnalyticsMetrics()`) natively instead of websockets to get model performance and inference.
+- VTK Hardware Accelerated Rendering:
+  * Employs vtkColorTransferFunction to apply custom color heatmaps mathematically.
+  * Employs vtkPiecewiseFunction (Opacity Transfer) acting as a threshold slider, natively 
+    simulating "X-Ray Slicing" by fading lower tissue thresholds.
+
+
+--------------------------------------------------------------------------------
+3. END-TO-END SYSTEM DATASUPPLY & TRAINING FLOW 
+--------------------------------------------------------------------------------
+
+STEP A: Federated Nodes (The Data Gatherers)
+- The architecture uses 3 separate microservice nodes (Imaging, Clinical, Pathology) 
+  simulating different hospital departments. 
+- Dataset files are mounted via Docker volumes across these nodes.
+
+STEP B: PINN Central Aggregator (The Brain)
+- The FastAPI server (`backend/pinn_server`) uses Federated Averaging (FedAvg) to pull 
+  weights from the hospital nodes without exposing raw patient data.
+- The `MultimodalPINN` model fuses the data using "Late Fusion" and applies the 
+  Physics Loss (Navier-Cauchy constraint) to ensure predicted tissue stiffness obeys 
+  the laws of elastic biomechanics.
+
+STEP C: User Interface Interactions (The Dashboard)
+- A doctor logs into the `Dashboard` (Next.js/React).
+- They view real-time Node Health and live Training accuracy charts (Recharts mapping MSE/Physics loss).
+- They navigate to the `Simulation` page and use the `PatientInputForm` to run a virtual patient.
+- The UI triggers `/predict`. The AI returns the stiffness matrix, confidence scores, and Lesion locations.
+
+STEP D: Feedback Loop & Real-Time Sync
+- The UI's `DigitalTwinViewer` updates instantly:
+  - The 3D model transforms colors and shapes to reflect the lesions.
+  - The "Virtual Probe" tooltip tracks the mouse via Raycasting, displaying exact kPa counts.
+  - The `PredictionEnginePanel` updates its radial gauges to reflect the new patient Risk Severity.
+
+
+--------------------------------------------------------------------------------
+4. DEPLOYMENT TOPOLOGY (EC2 + DOCKER + NGINX)
+--------------------------------------------------------------------------------
+- NGINX Edge Proxy (Port 80/443)
+  └──> Next.js Frontend (Port 3000)
+  └──> FastAPI Central PINN (Port 8000 via `/api/` & `/ws/stream`)
+         ├──> Clinical Sub-Node (Port 8002)
+         ├──> Pathology Sub-Node (Port 8003)
+         └──> Imaging Sub-Node (Port 8001)
+
+This flow guarantees complete data synchronization between the UI, the AI backend, 
+and the 3D WebGL renderer.
+================================================================================

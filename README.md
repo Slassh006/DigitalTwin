@@ -1,6 +1,6 @@
 # Endotwin: Endometriosis Digital Twin Platform 🏥
 
-A next-generation **Digital Twin** platform for endometriosis prediction, utilizing **Federated Learning** and **Physics-Informed Neural Networks (PINNs)**. This system integrates real-time node contributions, longitudinal analytics, and high-fidelity 3D visualization to provide personalized patient insights while preserving data privacy.
+A next-generation **Digital Twin** platform for endometriosis prediction, utilizing **Federated Learning** and **Physics-Informed Neural Networks (PINNs)**. This system integrates real-time node contributions, longitudinal analytics, and high-fidelity 2D clinical visualizations to provide personalized patient insights while preserving data privacy.
 
 ---
 
@@ -14,12 +14,15 @@ A next-generation **Digital Twin** platform for endometriosis prediction, utiliz
 ### 2. 🧠 Physics-Informed AI (PINN)
 *   **Medical Accuracy:** Incorporates tissue elasticity physics (Lamé parameters) into the loss function.
 *   **Constraint Enforcement:** Ensures predictions obey biological laws (e.g., stiff tissue corresponds to lesions).
-*   **Dynamic Hyperparameters:** Real-time tuning of learning rates, batch sizes, and physics weights via the Training Dashboard.
+*   **Unstructured Data Pipeline:** Automatically extracts biological markers (CA-125, VAS pain score, lesion size) directly from patient PDFs and scanned images (using NLP and OCR). 
 
 ### 3. 🖥️ Endotwin Console (Frontend)
-*   **Real-Time 3D Visualization:** Interactive **Digital Twin** of the uterus (`uterus.glb`) rendered with `Three.js`.
-    *   **Stiffness Mapping:** Dynamic color-coding (Green=Healthy, Red=Lesion) based on AI predictions.
-    *   **Lesion Markers:** 3D spatial markers identifying potential endometriosis sites.
+*   **3D Clinical Dashboard:**
+    *   **Automated Report Ingestion:** Drag-and-drop interface for doctors to upload raw clinical reports.
+    *   **Biomarker Radar Charts:** Compares extracted patient parameters against healthy baselines in real-time.
+    *   **Dual 3D Anatomy Viewers:** High-fidelity interactive viewers combining surface anatomy and biomechanical tissue density heatmaps:
+        *   **Surface Mesh Viewer (`@react-three/fiber`)**: Real-time rendering of a professional `.glb` anatomical model featuring dynamic physics-informed 3D lesion generation directly mapped to coordinate anchors based on PINN input.
+        *   **Biomechanical Volume Map (`@kitware/vtk.js`)**: Synthetic physics rendering showing volumetric cross-sections of interior tissue stiffness probability maps.
 *   **Live Training Metrics:**
     *   **Quantum Console Logs:** Streaming logs of training epochs and system events.
     *   **Evolution Graph:** Real-time MSE and Physics Loss tracking.
@@ -35,6 +38,7 @@ A next-generation **Digital Twin** platform for endometriosis prediction, utiliz
 ### Prerequisites
 *   **Node.js 18+**
 *   **Python 3.9+**
+*   **Tesseract OCR** (For image parsing)
 *   **Docker Desktop**
 *   **Google Cloud SDK** (for GKE deployment)
 
@@ -48,10 +52,13 @@ npm run dev
 # Access at http://localhost:3000
 ```
 
-**Backend (Simulation):**
-To run the full backend locally using Docker Compose:
+**Backend (Simulation & PINN Server):**
+Ensure you have the Python dependencies installed, including PyMuPDF and pytesseract for the document extraction pipeline.
 ```bash
-docker-compose up --build
+cd backend
+pip install -r requirements-pinn.txt
+python -m uvicorn pinn_server.server:app --reload
+# Access API at http://127.0.0.1:8000
 ```
 
 ### 2. Cloud Deployment (GKE) ☁️
@@ -87,15 +94,17 @@ H:/Akash/DigitalTwin/
 ├── frontend/               # Next.js 14 Application
 │   ├── app/                # App Router (Pages)
 │   ├── components/         # React Components
-│   │   ├── three/          # 3D Visualization (DigitalTwinViewer)
+│   │   ├── visualization/  # 3D Clinical Dashboard (VTK.js & React Three Fiber)
+│   │   ├── ui/             # Reusable UI (Tabs, Forms)
 │   │   ├── training/       # Training Dashboard Panels
 │   │   └── analytics/      # Analytics Charts
+│   ├── public/             
+│   │   └── uterus3DModal.glb # Static 3D mesh model asset
 │   ├── lib/                # Utilities & API Clients
-│   ├── Dockerfile          # Frontend Container Config
-│   └── public/
-│       └── models/         # 3D Assets (uterus.glb)
+│   └── Dockerfile          # Frontend Container Config
 ├── backend/                # Python Microservices
-│   ├── pinn_server/        # Central Aggregator (FastAPI)
+│   ├── pinn_server/        # Central Aggregator & Inference API (FastAPI)
+│   ├── utils/              # NLP & OCR Document Parsers
 │   └── clients/            # Federated Nodes (Imaging, Clinical, Pathology)
 ├── k8s/                    # Kubernetes Manifests
 │   ├── frontend/           # Frontend Deployment & Service
@@ -108,9 +117,28 @@ H:/Akash/DigitalTwin/
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack & Architecture Decisions
 
-*   **Frontend:** Next.js 14, React, TypeScript, Tailwind CSS, Framer Motion
-*   **Visualization:** React Three Fiber, Drei, Recharts
-*   **Backend:** Python, FastAPI, PyTorch (PINN)
-*   **Infrastructure:** Docker, Google Kubernetes Engine (GKE), Artifact Registry
+### **Frontend**
+*   **Framework:** Next.js 14, React, TypeScript
+    *   *Why?* Next.js provides a robust foundation for building scalable SPAs with seamless routing and optimized performance. TypeScript ensures type safety across complex medical data structures.
+*   **Styling:** Tailwind CSS, Framer Motion, shadcn/ui
+    *   *Why?* Tailwind allows for rapid styling with a highly customizable design system. Framer Motion provides the fluid, modern animations that make the dashboard feel active and responsive.
+*   **Visualization:** VTK.js, React Three Fiber, Recharts
+    *   *Why?* For high-grade medical simulation, we need true 3D spatial anchoring. `VTK.js` provides volumetric heatmap layers (stiffness maps) common in DICOM viewers. `React Three Fiber` alongside `@react-three/drei` provides performant surface mesh rendering (parsing `.glb` anatomy models) to display dynamic anatomical changes (lesions) in a photorealistic context. Recharts powers our radar and bar charts for clinical comparison.
+*   **Data Ingestion:** react-dropzone
+    *   *Why?* Enables a seamless drag-and-drop interface for users to upload unstructured medical files (PDFs, images) directly into the simulation pipeline.
+
+### **Backend**
+*   **Core:** Python, FastAPI
+    *   *Why?* FastAPI is highly performant and specifically built to handle the asynchronous API calls needed for federated learning nodes and AI inference endpoints.
+*   **Machine Learning:** PyTorch (PINN)
+    *   *Why?* PyTorch allows us to construct custom loss functions that encode physical laws (tissue elasticity) alongside traditional data-driven learning, rather than just relying on generic ML structures.
+*   **Unstructured Data Pipeline (NLP/OCR):** 
+    *   **PyMuPDF (`fitz`):** For fast, accurate text extraction from medical PDFs.
+    *   **pytesseract / OpenCV:** For OCR extraction of scanned medical results or imaging reports.
+    *   *Why?* Medical data exists in unstructured formats. These libraries enable the backend to automatically parse natural language (e.g., "CA-125 level is 18 U/mL") and reliably translate it into the scaled feature vectors our PINN requires.
+
+### **Infrastructure**
+*   **Containers & Orchestration:** Docker, Google Kubernetes Engine (GKE)
+    *   *Why?* GKE orchestrates the federated learning deployment, allowing each node (Clinical, Pathology, Imaging) to run as isolated, secure microservices that simulate a realistic multi-hospital environment.

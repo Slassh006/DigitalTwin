@@ -2,7 +2,7 @@
  * API client for communicating with the PINN backend.
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8004';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '/api' : 'http://localhost:8000');
 
 export interface PredictionResponse {
     prediction: number;
