@@ -2,7 +2,7 @@
  * API client for communicating with the PINN backend.
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '/api' : 'http://localhost:8000');
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8004';
 
 export interface PredictionResponse {
     prediction: number;
@@ -31,18 +31,13 @@ export interface FederatedNodesStatus {
     nodes: NodeStatus[];
 }
 
-export interface PatientPredictInput {
-    patient_id?: string
-    imaging_features?: number[]
-    clinical_features?: number[]
-    pathology_features?: number[]
-}
-
-export async function predict(input?: PatientPredictInput): Promise<PredictionResponse> {
+export async function predict(patientId?: string): Promise<PredictionResponse> {
     const response = await fetch(`${API_BASE_URL}/predict`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(input ?? {}),
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ patient_id: patientId }),
     });
 
     if (!response.ok) {
@@ -99,6 +94,33 @@ export async function getStats(): Promise<StatsResponse> {
 
     if (!response.ok) {
         throw new Error('Failed to fetch stats');
+    }
+
+    return response.json();
+}
+
+// ==================== Logs (for Quantum Console / System Logs) ====================
+
+export interface LogEntry {
+    id: string;
+    timestamp: string;
+    type: string;
+    message: string;
+}
+
+export interface LogsResponse {
+    logs: LogEntry[];
+    count: number;
+}
+
+export async function getLogs(sinceId?: string, limit: number = 100): Promise<LogsResponse> {
+    const params = new URLSearchParams();
+    if (sinceId != null) params.set('since', sinceId);
+    params.set('limit', String(limit));
+    const response = await fetch(`${API_BASE_URL}/logs?${params}`);
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch logs');
     }
 
     return response.json();
@@ -256,22 +278,5 @@ export async function getAnalyticsMetrics(): Promise<AnalyticsMetrics> {
         throw new Error('Failed to fetch analytics metrics');
     }
 
-    return response.json();
-}
-
-// ==================== Real-time Log Streaming ====================
-
-export interface LogEntry {
-    id: string;
-    timestamp: string;
-    type: 'INFO' | 'WARN' | 'ERROR' | 'TRAIN' | 'SUCCESS' | 'DEBUG';
-    message: string;
-}
-
-export async function getLogs(since?: string, limit = 100): Promise<{ logs: LogEntry[]; count: number }> {
-    const params = new URLSearchParams({ limit: String(limit) });
-    if (since) params.set('since', since);
-    const response = await fetch(`${API_BASE_URL}/logs?${params}`);
-    if (!response.ok) throw new Error('Failed to fetch logs');
     return response.json();
 }

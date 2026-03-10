@@ -35,7 +35,7 @@ export default function RootLayout({
                     </a>
 
                     <ToastProviderWrapper>
-                        <main className="h-screen w-screen overflow-hidden bg-[#0f0f13]">
+                        <main id="main-content" className="h-screen w-screen overflow-hidden bg-[#0f0f13]" role="main">
                             {children}
                         </main>
                     </ToastProviderWrapper>

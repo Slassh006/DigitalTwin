@@ -1,8 +1,6 @@
 "use client"
 
-"use client"
-
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { Activity, Database, Dna, FileText, AlertCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { getNodeStatus, type NodeStatus } from "@/lib/api"
@@ -23,13 +21,7 @@ export default function FederatedNodesPanel() {
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    useEffect(() => {
-        fetchStatus()
-        const interval = setInterval(fetchStatus, 5000) // Poll every 5s
-        return () => clearInterval(interval)
-    }, [])
-
-    const fetchStatus = async () => {
+    const fetchStatus = useCallback(async () => {
         try {
             const data = await getNodeStatus()
 
@@ -78,7 +70,13 @@ export default function FederatedNodesPanel() {
         } finally {
             setIsLoading(false)
         }
-    }
+    }, [])
+
+    useEffect(() => {
+        fetchStatus()
+        const interval = setInterval(fetchStatus, 5000) // Poll every 5s
+        return () => clearInterval(interval)
+    }, [fetchStatus])
 
     return (
         <aside className="glass-panel rounded-xl flex flex-col overflow-hidden h-full">

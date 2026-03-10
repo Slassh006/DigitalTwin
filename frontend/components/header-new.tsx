@@ -26,8 +26,8 @@ export default function Header() {
                 </div>
             </div>
 
-            {/* Navigation */}
-            <nav className="hidden md:flex items-center gap-1 bg-black/20 p-1 rounded-full border border-white/5">
+            {/* Navigation - visible on all screens; scrollable on small */}
+            <nav className="flex items-center gap-1 bg-black/20 p-1 rounded-full border border-white/5 overflow-x-auto min-w-0 max-w-full md:max-w-none scrollbar-thin scrollbar-thumb-white/10" aria-label="Main navigation">
                 {[
                     { name: 'Dashboard', path: '/' },
                     { name: 'Simulation', path: '/simulation' },
@@ -40,7 +40,7 @@ export default function Header() {
                         <Link
                             key={item.path}
                             href={item.path}
-                            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${isActive
+                            className={`shrink-0 px-3 py-1.5 md:px-4 rounded-full text-xs md:text-sm font-medium transition-all whitespace-nowrap ${isActive
                                 ? 'bg-primary/20 text-white shadow-neon-primary border border-primary/50'
                                 : 'text-gray-400 hover:text-white hover:bg-white/5'
                                 }`}
@@ -65,9 +65,9 @@ export default function Header() {
                     <Bell className="w-5 h-5" />
                 </button>
 
-                <button className="flex items-center justify-center size-9 rounded-lg hover:bg-[#362348] text-gray-400 hover:text-white transition-colors">
+                <Link href="/settings" className="flex items-center justify-center size-9 rounded-lg hover:bg-[#362348] text-gray-400 hover:text-white transition-colors" aria-label="Settings">
                     <Settings className="w-5 h-5" />
-                </button>
+                </Link>
 
                 <div className="h-6 w-px bg-[#362348] mx-1" />
 
