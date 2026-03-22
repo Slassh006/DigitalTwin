@@ -31,17 +31,51 @@ export interface FederatedNodesStatus {
     nodes: NodeStatus[];
 }
 
-export async function predict(patientId?: string): Promise<PredictionResponse> {
+export interface PatientFeatures {
+    imaging: number[];    // 128-dim imaging feature vector
+    clinical: number[];   // 64-dim clinical feature vector
+    pathology: number[];  // 64-dim pathology feature vector
+}
+
+/** Generate a deterministic proxy feature vector of `dim` values seeded by index. */
+function _makeProxyFeatures(dim: number, seed: number, baseValue: number): number[] {
+    // Simple deterministic pseudo-random via a linear congruential generator
+    let s = seed * 1664525 + 1013904223;
+    return Array.from({ length: dim }, (_, i) => {
+        s = (s * 1664525 + 1013904223) & 0xffffffff;
+        const normalized = ((s >>> 0) / 0xffffffff);
+        return parseFloat((baseValue + normalized * (1 - baseValue)).toFixed(6));
+    });
+}
+
+/** Build default feature vectors when no patient data is provided. */
+function _defaultFeatures(): PatientFeatures {
+    return {
+        imaging:   _makeProxyFeatures(128, 42,  0.3),
+        clinical:  _makeProxyFeatures(64,  137, 0.35),
+        pathology: _makeProxyFeatures(64,  919, 0.32),
+    };
+}
+
+export async function predict(patientId?: string, features?: PatientFeatures): Promise<PredictionResponse> {
+    const feat = features ?? _defaultFeatures();
+
     const response = await fetch(`${API_BASE_URL}/predict`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ patient_id: patientId }),
+        body: JSON.stringify({
+            patient_id: patientId,
+            imaging:    { features: feat.imaging },
+            clinical:   { features: feat.clinical },
+            pathology:  { features: feat.pathology },
+        }),
     });
 
     if (!response.ok) {
-        throw new Error('Prediction failed');
+        const body = await response.text().catch(() => '');
+        throw new Error(`Prediction failed (${response.status}): ${body}`);
     }
 
     return response.json();

@@ -1,7 +1,7 @@
 import pytest
 import torch
 import torch.nn as nn
-from backend.utils.physics_loss import navier_cauchy_residual
+from utils.physics_loss import navier_cauchy_residual
 
 def test_navier_cauchy_static_equilibrium():
     """

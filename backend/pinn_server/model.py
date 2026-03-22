@@ -231,27 +231,6 @@ class EndoPINN(nn.Module):
         self.eval()
         
         return mean_prediction, mean_stiffness, confidence.unsqueeze(-1) if confidence.dim() == 1 else confidence
-        """
-        Make prediction with confidence score.
-        
-        Confidence is based on consistency with physics constraints.
-        
-        Returns:
-            prediction: Endometriosis probability
-            stiffness: Tissue stiffness
-            confidence: Confidence score (0-1)
-        """
-        prediction, stiffness = self.forward(
-            imaging_features, clinical_features, pathology_features
-        )
-        
-        # Compute confidence based on physics consistency
-        # High confidence when prediction and stiffness are aligned
-        expected_stiffness = 1.5 + prediction.squeeze() * 7.0  # Linear mapping
-        deviation = torch.abs(stiffness.squeeze() - expected_stiffness)
-        confidence = 1.0 - torch.clamp(deviation / 7.0, 0.0, 1.0)
-        
-        return prediction, stiffness, confidence.unsqueeze(-1)
 
 
 class EnsemblePINN(nn.Module):
